@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,  // 啟用自動格式化
+  "files.trimTrailingWhitespace": true,  // 儲存時移除行尾空白
+  "files.insertFinalNewline": true,  // 新增檔案結尾空行
+  "editor.detectIndentation": false,  // 禁用自動檢測縮排
+  "editor.tabSize": 2,  // 預設縮排為 2 空格
+  "editor.insertSpaces": true,  // 使用空格而非 Tab
+  "prettier.useEditorConfig": true
+}
