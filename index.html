@@ -78,11 +78,30 @@
     </style>
   </head>
   <body>
-    <h1>Segmenting images using the MediaPipe Image Segmentation Task</h1>
-
     <section id="demos" class="invisible">
-      <h2>Demo: Segmenting Images</h2>
-      <p><b>Click on an image below</b> to see its Segmentation.</p>
+      <select name="color" id="color">
+        <option value="0">Medium Gray</option>
+        <option value="1">Vivid Green</option>
+        <option value="2">Strong Purplish Pink</option>
+        <option value="3">Strong Blue</option>
+        <option value="4">Strong Yellowish Pink</option>
+        <option value="5">Strong Violet</option>
+        <option value="6">Vivid Orange Yellow</option>
+        <option value="7">Strong Purplish Red</option>
+        <option value="8">Vivid Greenish Yellow</option>
+        <option value="9">Strong Reddish Brown</option>
+        <option value="10">Vivid Yellowish Green</option>
+        <option value="11">Deep Yellowish Brown</option>
+        <option value="12">Vivid Reddish Orange</option>
+        <option value="13">Dark Olive Green</option>
+        <option value="14">Vivid Blue</option>
+        <option value="15">Vivid Yellow</option>
+        <option value="16">Strong Purple</option>
+        <option value="17">Vivid Orange</option>
+        <option value="18">Very Light Blue</option>
+        <option value="19">Vivid Red</option>
+        <option value="20">Grayish Yellow</option>
+      </select>
       <div class="segmentOnClick">
         <canvas class="removed"></canvas>
         <img src="./assets/hair1.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
@@ -93,13 +112,17 @@
         <img src="./assets/hair2.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
       </div>
     </section>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="module">
       import { ImageSegmenter, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2";
+
       // Get DOM elements
-      const demosSection = document.getElementById("demos");
+      const $demosSection = $("#demos");
+      const $color = $("#color");
       let runningMode = "IMAGE";
       let imageSegmenter;
       let labels;
+
       const legendColors = [
         [129, 112, 102, 255], // Medium Gray
         [0, 125, 52, 255], // Vivid Green
@@ -123,6 +146,8 @@
         [193, 0, 32, 255], // Vivid Red
         [206, 162, 98, 255], // Grayish Yellow
       ];
+      let selectedColorIndex = 0;
+
       const createImageSegmenter = async () => {
         const audio = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
@@ -139,57 +164,52 @@
           outputConfidenceMasks: false,
         });
         labels = imageSegmenter.getLabels();
-        demosSection.classList.remove("invisible");
+        $demosSection.removeClass("invisible");
+        render();
       };
       createImageSegmenter();
-      const imageContainers = document.getElementsByClassName("segmentOnClick");
-      // Add click event listeners for the img elements.
-      for (let i = 0; i < imageContainers.length; i++) {
-        imageContainers[i].getElementsByTagName("img")[0].addEventListener("click", handleClick);
-      }
-      /**
-       * Demo 1: Segmented images on click and display results.
-       */
-      let canvasClick;
-      async function handleClick(event) {
-        // Do not segmented if imageSegmenter hasn't loaded
-        if (imageSegmenter === undefined) {
-          return;
-        }
-        canvasClick = event.target.parentElement.getElementsByTagName("canvas")[0];
-        canvasClick.classList.remove("removed");
-        canvasClick.width = event.target.naturalWidth;
-        canvasClick.height = event.target.naturalHeight;
-        const cxt = canvasClick.getContext("2d");
-        cxt.clearRect(0, 0, canvasClick.width, canvasClick.height);
-        cxt.drawImage(event.target, 0, 0, canvasClick.width, canvasClick.height);
-        event.target.style.opacity = 0;
-        // imageSegmenter.segment() when resolved will call the callback function.
-        imageSegmenter.segment(event.target, callback);
-      }
-      function callback(result) {
-        const cxt = canvasClick.getContext("2d");
-        const { width, height } = result.categoryMask;
-        let imageData = cxt.getImageData(0, 0, width, height).data;
-        canvasClick.width = width;
-        canvasClick.height = height;
-        let category = "";
-        const mask = result.categoryMask.getAsUint8Array();
-        console.log(width, height, labels);
-        for (let i in mask) {
-          if (mask[i] > 0) {
-            category = labels[mask[i]];
-          }
-          if (mask[i] !== 1) continue;
-          const legendColor = legendColors[mask[i] % legendColors.length];
-          imageData[i * 4] = (legendColor[0] + imageData[i * 4]) / 2;
-          imageData[i * 4 + 1] = (legendColor[1] + imageData[i * 4 + 1]) / 2;
-          imageData[i * 4 + 2] = (legendColor[2] + imageData[i * 4 + 2]) / 2;
-          imageData[i * 4 + 3] = (legendColor[3] + imageData[i * 4 + 3]) / 2;
-        }
-        const uint8Array = new Uint8ClampedArray(imageData.buffer);
-        const dataNew = new ImageData(uint8Array, width, height);
-        cxt.putImageData(dataNew, 0, 0);
+
+      $color.on("change", function () {
+        selectedColorIndex = parseInt(this.value);
+        console.log(selectedColorIndex);
+        render();
+      });
+
+      function render() {
+        $(".segmentOnClick").each(async function () {
+          const $canvas = $(this).find("canvas");
+          const $img = $(this).find("img");
+          console.log({ $canvas, $img });
+          $canvas.removeClass("removed");
+          $canvas[0].width = $img.naturalWidth;
+          $canvas[0].height = $img.naturalHeight;
+
+          const ctx = $canvas[0].getContext("2d");
+          ctx.clearRect(0, 0, $canvas[0].width, $canvas[0].height);
+          ctx.drawImage($img[0], 0, 0, $canvas[0].width, $canvas[0].height);
+
+          imageSegmenter.segment($img[0], (result) => {
+            const { width, height } = result.categoryMask;
+            const imageData = ctx.getImageData(0, 0, width, height).data;
+
+            $canvas[0].width = width;
+            $canvas[0].height = height;
+
+            const mask = result.categoryMask.getAsUint8Array();
+            for (let i = 0; i < mask.length; i++) {
+              if (mask[i] === 0) continue;
+              const legendColor = legendColors[selectedColorIndex];
+              imageData[i * 4] = (legendColor[0] + imageData[i * 4]) / 2;
+              imageData[i * 4 + 1] = (legendColor[1] + imageData[i * 4 + 1]) / 2;
+              imageData[i * 4 + 2] = (legendColor[2] + imageData[i * 4 + 2]) / 2;
+              imageData[i * 4 + 3] = (legendColor[3] + imageData[i * 4 + 3]) / 2;
+            }
+
+            const uint8Array = new Uint8ClampedArray(imageData.buffer);
+            const newImageData = new ImageData(uint8Array, width, height);
+            ctx.putImageData(newImageData, 0, 0);
+          });
+        });
       }
     </script>
   </body>
