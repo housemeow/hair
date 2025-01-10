@@ -72,11 +72,13 @@
       <div class="segment">
         <canvas class="removed"></canvas>
         <img src="./assets/hair1.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
+        <input type="file" class="removed" accept="image/*" />
       </div>
 
       <div class="segment">
         <canvas class="removed"></canvas>
         <img src="./assets/hair2.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
+        <input type="file" class="removed" accept="image/*" />
       </div>
     </section>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -88,12 +90,34 @@
       // Get DOM elements
       const $demosSection = $("#demos");
       const $color = $("#color");
+      const $fileInput = $('input[type="file"]');
       let runningMode = "IMAGE";
       let imageSegmenter;
       let labels;
 
       let colors = [];
       let selectedColorIndex = 0;
+
+      $(".segment canvas").on("click", function () {
+        $(this).siblings("input").click();
+      });
+
+      // Preview selected image
+      $fileInput.on("change", function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            console.log(e.target.result);
+            const $img = $(this).siblings("img");
+            $img.one("load", () => {
+              render($(this).parent());
+            });
+            $img.attr("src", e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
 
       await fetch(COLOR_DATABASE)
         .then((response) => response.text())
@@ -159,8 +183,9 @@
         render();
       });
 
-      function render() {
-        $(".segment").each(async function () {
+      function render(segment) {
+        console.log(segment, $(".segment"));
+        (segment || $(".segment")).each(async function () {
           const $canvas = $(this).find("canvas");
           const $img = $(this).find("img");
           console.log({ $canvas, $img });
