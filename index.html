@@ -47,29 +47,16 @@
   </head>
   <body>
     <section id="demos" class="invisible">
-      <select name="color" id="color">
-        <option value="0">Medium Gray</option>
-        <option value="1">Vivid Green</option>
-        <option value="2">Strong Purplish Pink</option>
-        <option value="3">Strong Blue</option>
-        <option value="4">Strong Yellowish Pink</option>
-        <option value="5">Strong Violet</option>
-        <option value="6">Vivid Orange Yellow</option>
-        <option value="7">Strong Purplish Red</option>
-        <option value="8">Vivid Greenish Yellow</option>
-        <option value="9">Strong Reddish Brown</option>
-        <option value="10">Vivid Yellowish Green</option>
-        <option value="11">Deep Yellowish Brown</option>
-        <option value="12">Vivid Reddish Orange</option>
-        <option value="13">Dark Olive Green</option>
-        <option value="14">Vivid Blue</option>
-        <option value="15">Vivid Yellow</option>
-        <option value="16">Strong Purple</option>
-        <option value="17">Vivid Orange</option>
-        <option value="18">Very Light Blue</option>
-        <option value="19">Vivid Red</option>
-        <option value="20">Grayish Yellow</option>
+      <!-- checkbox for hide canvas / show canvas -->
+      <label for="visible"
+        >Visible:
+        <input type="checkbox" id="visible" checked />
+      </label>
+      <select name="renderMode" id="renderMode">
+        <option value="category">Category</option>
+        <option value="confidence">Confidence</option>
       </select>
+      <select name="color" id="color"></select>
       <div class="segment">
         <canvas class="removed"></canvas>
         <img src="./assets/測試用圖_改色.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
@@ -153,9 +140,11 @@
 
       class HairProcessor {
         constructor(options = {}) {
-          const { hairColor, img, canvas } = options;
+          const { hairColor, renderMode, confidenceThreshold, img, canvas } = options;
 
           this.hairColor = hairColor;
+          this.renderMode = renderMode || "category"; // category | confidence
+          this.confidenceThreshold = confidenceThreshold || 0.5;
           this.img = img;
           this.canvas = canvas;
           this.imageSegmenter = null;
@@ -181,6 +170,10 @@
           this.labels = this.imageSegmenter.getLabels();
         }
 
+        setRenderMode(mode) {
+          this.renderMode = mode;
+        }
+
         setColor(color) {
           this.hairColor = color;
         }
@@ -190,8 +183,8 @@
           this.canvas.height = this.img.naturalHeight;
 
           const ctx = this.canvas.getContext("2d");
-          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
           ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
           if (!this.segment) {
             this.segment = await new Promise((resolve) => {
@@ -207,13 +200,26 @@
           this.canvas.width = width;
           this.canvas.height = height;
 
-          const mask = this.segment.categoryMask.getAsUint8Array();
-          for (let i = 0; i < mask.length; i++) {
-            if (mask[i] === 0) continue;
-            imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
-            imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
-            imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
-            imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
+          if (this.renderMode === "category") {
+            const mask = this.segment.categoryMask.getAsUint8Array();
+            for (let i = 0; i < mask.length; i++) {
+              if (mask[i] === 0) continue;
+              imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
+              imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
+              imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
+              imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
+            }
+          } else {
+            const confidence = this.segment.confidenceMasks[1].getAsFloat32Array();
+            for (let i = 0; i < confidence.length; i++) {
+              const value = confidence[i];
+              if (value < this.confidenceThreshold) continue;
+              const ratio = (value - this.confidenceThreshold) / (1 - this.confidenceThreshold);
+              imageData[i * 4] = ((this.hairColor[0] + imageData[i * 4]) / 2) * ratio;
+              imageData[i * 4 + 1] = ((this.hairColor[1] + imageData[i * 4 + 1]) / 2) * ratio;
+              imageData[i * 4 + 2] = ((this.hairColor[2] + imageData[i * 4 + 2]) / 2) * ratio;
+              imageData[i * 4 + 3] = ((this.hairColor[3] + imageData[i * 4 + 3]) / 2) * ratio;
+            }
           }
 
           const uint8Array = new Uint8ClampedArray(imageData.buffer);
@@ -224,6 +230,8 @@
 
       const hairProcessor = new HairProcessor({
         hairColor: colors[selectedColorIndex].color,
+        renderMode: "category",
+        confidenceThreshold: 0.5,
         img: $(".segment img").get(0),
         canvas: $(".segment canvas").get(0),
       });
@@ -238,6 +246,20 @@
         $(".segment canvas").addClass("removed");
         await hairProcessor.render();
         $(".segment canvas").removeClass("removed");
+      });
+      $("#renderMode").on("change", function () {
+        hairProcessor.setRenderMode(this.value);
+        $(".segment canvas").addClass("removed");
+        hairProcessor.render();
+        $(".segment canvas").removeClass("removed");
+      });
+
+      $("#visible").on("change", function () {
+        if (this.checked) {
+          $(".segment canvas").removeClass("removed");
+        } else {
+          $(".segment canvas").addClass("removed");
+        }
       });
     </script>
   </body>
