@@ -185,7 +185,7 @@
           this.hairColor = color;
         }
 
-        render() {
+        async render() {
           this.canvas.width = this.img.naturalWidth;
           this.canvas.height = this.img.naturalHeight;
 
@@ -193,28 +193,32 @@
           ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
           ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
 
-          this.imageSegmenter.segment(this.img, (result) => {
-            console.log(result);
-            console.log(result.categoryMask);
-            const { width, height } = result.categoryMask;
-            const imageData = ctx.getImageData(0, 0, width, height).data;
+          if (!this.segment) {
+            this.segment = await new Promise((resolve) => {
+              this.imageSegmenter.segment(this.img, (result) => resolve(result));
+            });
+          }
 
-            this.canvas.width = width;
-            this.canvas.height = height;
+          console.log(this.segment);
+          console.log(this.segment.categoryMask);
+          const { width, height } = this.segment.categoryMask;
+          const imageData = ctx.getImageData(0, 0, width, height).data;
 
-            const mask = result.categoryMask.getAsUint8Array();
-            for (let i = 0; i < mask.length; i++) {
-              if (mask[i] === 0) continue;
-              imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
-              imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
-              imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
-              imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
-            }
+          this.canvas.width = width;
+          this.canvas.height = height;
 
-            const uint8Array = new Uint8ClampedArray(imageData.buffer);
-            const newImageData = new ImageData(uint8Array, width, height);
-            ctx.putImageData(newImageData, 0, 0);
-          });
+          const mask = this.segment.categoryMask.getAsUint8Array();
+          for (let i = 0; i < mask.length; i++) {
+            if (mask[i] === 0) continue;
+            imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
+            imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
+            imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
+            imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
+          }
+
+          const uint8Array = new Uint8ClampedArray(imageData.buffer);
+          const newImageData = new ImageData(uint8Array, width, height);
+          ctx.putImageData(newImageData, 0, 0);
         }
       }
 
