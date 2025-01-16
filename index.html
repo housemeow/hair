@@ -27,9 +27,6 @@
 
       .segment {
         position: relative;
-        float: left;
-        width: 48%;
-        margin: 2% 1%;
         z-index: 0;
       }
 
@@ -37,30 +34,38 @@
         position: absolute;
         top: 0px;
         bottom: 0px;
-        width: 100%;
       }
 
-      .segment img {
-        width: 100%;
+      .flex {
+        display: flex;
+      }
+
+      .flex.items-start {
+        align-items: flex-start;
       }
     </style>
   </head>
   <body>
     <section id="demos" class="invisible">
       <!-- checkbox for hide canvas / show canvas -->
-      <label for="visible"
-        >Visible:
-        <input type="checkbox" id="visible" checked />
-      </label>
-      <select name="renderMode" id="renderMode">
-        <option value="category">Category</option>
-        <option value="confidence">Confidence</option>
-      </select>
-      <select name="color" id="color"></select>
-      <input type="file" accept="image/*" />
-      <div class="segment">
-        <canvas class="removed"></canvas>
-        <img src="./assets/測試用圖_改色.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
+      <div class="flex">
+        <label for="visible"
+          >Visible:
+          <input type="checkbox" id="visible" checked />
+        </label>
+        <select name="renderMode" id="renderMode">
+          <option value="category">Category</option>
+          <option value="confidence">Confidence</option>
+        </select>
+        <select name="color" id="color"></select>
+        <input type="file" accept="image/*" />
+      </div>
+      <div class="flex items-start">
+        <img class="sample" src="./assets/測試用圖_改色.jpg" alt="" />
+        <div class="segment">
+          <canvas class="removed"></canvas>
+          <img src="" crossorigin="anonymous" title="Click to get segmentation!" />
+        </div>
       </div>
     </section>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -168,55 +173,82 @@
           this.hairColor = color;
         }
 
-        async render() {
-          this.canvas.width = this.img.naturalWidth;
-          this.canvas.height = this.img.naturalHeight;
-
-          const ctx = this.canvas.getContext("2d");
+        _clearCanvas(ctx) {
           ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
           ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
 
+        async _createSegment() {
           if (!this.segment) {
             this.segment = await new Promise((resolve) => {
               this.imageSegmenter.segment(this.img, (result) => resolve(result));
             });
           }
+        }
 
-          console.log(this.segment);
-          console.log(this.segment.categoryMask);
-          const { width, height } = this.segment.categoryMask;
-          const imageData = ctx.getImageData(0, 0, width, height).data;
-
-          this.canvas.width = width;
-          this.canvas.height = height;
-
-          if (this.renderMode === "category") {
-            const mask = this.segment.categoryMask.getAsUint8Array();
-            for (let i = 0; i < mask.length; i++) {
-              if (mask[i] === 0) continue;
-              imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
-              imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
-              imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
-              imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
-            }
-          } else {
-            const confidence = this.segment.confidenceMasks[1].getAsFloat32Array();
-            for (let i = 0; i < confidence.length; i++) {
-              const value = confidence[i];
-              if (value < this.confidenceThreshold) continue;
-              const ratio = (value - this.confidenceThreshold) / (1 - this.confidenceThreshold);
-              imageData[i * 4] = ((this.hairColor[0] + imageData[i * 4]) / 2) * ratio;
-              imageData[i * 4 + 1] = ((this.hairColor[1] + imageData[i * 4 + 1]) / 2) * ratio;
-              imageData[i * 4 + 2] = ((this.hairColor[2] + imageData[i * 4 + 2]) / 2) * ratio;
-              imageData[i * 4 + 3] = ((this.hairColor[3] + imageData[i * 4 + 3]) / 2) * ratio;
-            }
+        _renderHairCategory(imageData) {
+          const mask = this.segment.categoryMask.getAsUint8Array();
+          for (let i = 0; i < mask.length; i++) {
+            if (mask[i] === 0) continue;
+            imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
+            imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
+            imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
+            imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
           }
+        }
 
+        _renderHairConfidence(imageData) {
+          const confidence = this.segment.confidenceMasks[1].getAsFloat32Array();
+          for (let i = 0; i < confidence.length; i++) {
+            const value = confidence[i];
+            if (value < this.confidenceThreshold) continue;
+            const ratio = (value - this.confidenceThreshold) / (1 - this.confidenceThreshold);
+            imageData[i * 4] = ((this.hairColor[0] + imageData[i * 4]) / 2) * ratio;
+            imageData[i * 4 + 1] = ((this.hairColor[1] + imageData[i * 4 + 1]) / 2) * ratio;
+            imageData[i * 4 + 2] = ((this.hairColor[2] + imageData[i * 4 + 2]) / 2) * ratio;
+            imageData[i * 4 + 3] = ((this.hairColor[3] + imageData[i * 4 + 3]) / 2) * ratio;
+          }
+        }
+
+        _renderToCanvas(ctx, imageData, width, height) {
           const uint8Array = new Uint8ClampedArray(imageData.buffer);
           const newImageData = new ImageData(uint8Array, width, height);
           ctx.putImageData(newImageData, 0, 0);
         }
+
+        async render() {
+          this.canvas.width = this.img.naturalWidth;
+          this.canvas.height = this.img.naturalHeight;
+
+          const ctx = this.canvas.getContext("2d");
+          this._clearCanvas(ctx);
+
+          await this._createSegment();
+
+          const { width, height } = this.segment.categoryMask;
+          const imageData = ctx.getImageData(0, 0, width, height).data;
+
+          if (this.renderMode === "category") {
+            this._renderHairCategory(imageData);
+          } else {
+            this._renderHairConfidence(imageData);
+          }
+
+          this._renderToCanvas(ctx, imageData, width, height);
+        }
       }
+
+      const $sampleImg = $(".sample");
+      const $segmentImg = $(".segment img");
+
+      // 設定 .segment img 的 src 與 .sample 的 src 一樣
+      $segmentImg.attr("src", $sampleImg.attr("src"));
+
+      // 添加 load 事件
+      $segmentImg.one("load", function () {
+        console.log("Segmentation image loaded!");
+        // 在這裡可以執行其他邏輯
+      });
 
       const hairProcessor = new HairProcessor({
         hairColor: colors[selectedColorIndex].color,
