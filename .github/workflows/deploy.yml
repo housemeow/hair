@@ -1,0 +1,25 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # 當 main 分支有變更時執行，根據實際需求修改
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 檢出專案程式碼
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. 部署到 gh-pages 分支的 docs 資料夾
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          # use root
+          destination_dir: .
+          publish_branch: gh-pages
