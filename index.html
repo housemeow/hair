@@ -151,70 +151,90 @@
           });
         });
 
-      const createImageSegmenter = async () => {
-        const audio = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
-        );
-        imageSegmenter = await ImageSegmenter.createFromOptions(audio, {
-          baseOptions: {
-            modelAssetPath:
-              "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite",
+      class HairProcessor {
+        constructor(options = {}) {
+          const { hairColor, img, canvas } = options;
 
-            delegate: "GPU",
-          },
-          runningMode: runningMode,
-          outputCategoryMask: true,
-          outputConfidenceMasks: false,
-        });
-        labels = imageSegmenter.getLabels();
-        $demosSection.removeClass("invisible");
-        render();
-      };
-      createImageSegmenter();
+          this.hairColor = hairColor;
+          this.img = img;
+          this.canvas = canvas;
+          this.imageSegmenter = null;
+          this.labels = null;
+        }
 
-      $color.on("change", function () {
-        selectedColorIndex = parseInt(this.value);
-        console.log(selectedColorIndex);
-        render();
-      });
+        async loadModel() {
+          const audio = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
+          );
+          this.imageSegmenter = await ImageSegmenter.createFromOptions(audio, {
+            baseOptions: {
+              modelAssetPath:
+                // 2.1 hair model
+                "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite",
+              // 2.2 human model
+              delegate: "GPU",
+            },
+            runningMode: runningMode,
+            outputCategoryMask: true,
+            outputConfidenceMasks: true,
+          });
+          this.labels = this.imageSegmenter.getLabels();
+        }
 
-      function render(segment) {
-        console.log(segment, $(".segment"));
-        (segment || $(".segment")).each(async function () {
-          const $canvas = $(this).find("canvas");
-          const $img = $(this).find("img");
-          console.log({ $canvas, $img });
-          $canvas.removeClass("removed");
-          $canvas[0].width = $img.naturalWidth;
-          $canvas[0].height = $img.naturalHeight;
+        setColor(color) {
+          this.hairColor = color;
+        }
 
-          const ctx = $canvas[0].getContext("2d");
-          ctx.clearRect(0, 0, $canvas[0].width, $canvas[0].height);
-          ctx.drawImage($img[0], 0, 0, $canvas[0].width, $canvas[0].height);
+        render() {
+          this.canvas.width = this.img.naturalWidth;
+          this.canvas.height = this.img.naturalHeight;
 
-          imageSegmenter.segment($img[0], (result) => {
+          const ctx = this.canvas.getContext("2d");
+          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+
+          this.imageSegmenter.segment(this.img, (result) => {
+            console.log(result);
+            console.log(result.categoryMask);
             const { width, height } = result.categoryMask;
             const imageData = ctx.getImageData(0, 0, width, height).data;
 
-            $canvas[0].width = width;
-            $canvas[0].height = height;
+            this.canvas.width = width;
+            this.canvas.height = height;
 
             const mask = result.categoryMask.getAsUint8Array();
             for (let i = 0; i < mask.length; i++) {
               if (mask[i] === 0) continue;
-              const legendColor = colors[selectedColorIndex].color;
-              imageData[i * 4] = (legendColor[0] + imageData[i * 4]) / 2;
-              imageData[i * 4 + 1] = (legendColor[1] + imageData[i * 4 + 1]) / 2;
-              imageData[i * 4 + 2] = (legendColor[2] + imageData[i * 4 + 2]) / 2;
-              imageData[i * 4 + 3] = (legendColor[3] + imageData[i * 4 + 3]) / 2;
+              imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
+              imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
+              imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
+              imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
             }
 
             const uint8Array = new Uint8ClampedArray(imageData.buffer);
             const newImageData = new ImageData(uint8Array, width, height);
             ctx.putImageData(newImageData, 0, 0);
           });
-        });
+        }
       }
+
+      const hairProcessor = new HairProcessor({
+        hairColor: colors[selectedColorIndex].color,
+        img: $(".segment img").get(0),
+        canvas: $(".segment canvas").get(0),
+      });
+      await hairProcessor.loadModel();
+      $demosSection.removeClass("invisible");
+      await hairProcessor.render();
+      $(".segment canvas").removeClass("removed");
+
+      $color.on("change", async function () {
+        selectedColorIndex = parseInt(this.value);
+        hairProcessor.setColor(colors[selectedColorIndex].color);
+        $(".segment canvas").addClass("removed");
+        await hairProcessor.render();
+        $(".segment canvas").removeClass("removed");
+      });
     </script>
   </body>
 </html>
