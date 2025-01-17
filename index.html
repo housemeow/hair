@@ -131,19 +131,22 @@
               headerMap.argumentIndex = header.split("\t").findIndex((col) => col === "參數");
               headerMap.valueIndex = header.split("\t").findIndex((col) => col === "數值");
 
-              if (headerMap.confidenceThresholdIndex === -1) {
+              if (headerMap.confidenceThreshold1Index === -1) {
                 alert("資料庫欄位錯誤");
               }
 
               const config = {
-                confidenceThreshold: 0.5,
+                confidenceThreshold1: 0.5,
               };
 
               rows
                 .map((row) => row.split("\t"))
                 .forEach(([argument, value]) => {
-                  if (argument === "confidenceThreshold") {
-                    config.confidenceThreshold = parseFloat(value);
+                  if (argument === "confidenceThreshold1") {
+                    config.confidenceThreshold1 = parseFloat(value);
+                  }
+                  if (argument === "confidenceThreshold2") {
+                    config.confidenceThreshold2 = parseFloat(value);
                   }
                 });
 
@@ -165,9 +168,11 @@
          * 4. render hair to canvas
          */
         constructor(options = {}) {
-          const { hairColor, renderMode, confidenceThreshold, originalImg, img, canvas } = options;
+          const { hairColor, renderMode, confidenceThreshold1, confidenceThreshold2, originalImg, img, canvas } =
+            options;
 
-          this.confidenceThreshold = confidenceThreshold || 0.5;
+          this.confidenceThreshold1 = confidenceThreshold1 || 0.5;
+          this.confidenceThreshold2 = confidenceThreshold2 || 0.7;
           this.isCrop = false;
           this.setColor(hairColor);
           this.setRenderMode(renderMode || "category");
@@ -342,11 +347,22 @@
           const confidence = this.segment.confidenceMasks[1].getAsFloat32Array();
           for (let i = 0; i < confidence.length; i++) {
             const value = confidence[i];
-            if (value < this.confidenceThreshold) continue;
-            const ratio = (value - this.confidenceThreshold) / (1 - this.confidenceThreshold);
-            imageData[i * 4] = ((this.hairColor[0] + imageData[i * 4]) / 2) * ratio;
-            imageData[i * 4 + 1] = ((this.hairColor[1] + imageData[i * 4 + 1]) / 2) * ratio;
-            imageData[i * 4 + 2] = ((this.hairColor[2] + imageData[i * 4 + 2]) / 2) * ratio;
+            if (value < this.confidenceThreshold1) continue;
+
+            function getRatio(value, threshold1, threshold2) {
+              if (value < threshold1) {
+                return 0;
+              } else if (value < threshold2) {
+                return (value - threshold1) / (threshold2 - threshold1);
+              } else {
+                return 1;
+              }
+            }
+            const ratio = getRatio(value, this.confidenceThreshold1, this.confidenceThreshold2);
+            console.log({ ratio, value, threshold1: this.confidenceThreshold1, threshold2: this.confidenceThreshold2 });
+            imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
+            imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
+            imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
             imageData[i * 4 + 3] = ((this.hairColor[3] + imageData[i * 4 + 3]) / 2) * ratio;
           }
         }
@@ -430,7 +446,7 @@
         $color.append(
           $("<option>", {
             value: index,
-            text: color.name,
+            text: `${color.name} (${color.color.join(", ")})`,
           })
         );
       });
@@ -438,7 +454,8 @@
       let hairProcessor = new HairProcessor({
         hairColor: colors[selectedColorIndex].color,
         renderMode: "confidence",
-        confidenceThreshold: config.confidenceThreshold,
+        confidenceThreshold1: config.confidenceThreshold1,
+        confidenceThreshold2: config.confidenceThreshold2,
         originalImg: $sampleImg.get(0),
         img: $(".segment img").get(0),
         canvas: $(".segment canvas").get(0),
