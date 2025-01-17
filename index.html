@@ -41,15 +41,27 @@
         display: flex;
       }
 
+      .flex-wrap {
+        flex-wrap: wrap;
+      }
+
+      .flex-col {
+        flex-direction: column;
+      }
+
       .flex.items-start {
         align-items: flex-start;
+      }
+
+      .w-full {
+        width: 100%;
       }
     </style>
   </head>
   <body>
     <section id="demos" class="invisible">
       <!-- checkbox for hide canvas / show canvas -->
-      <div class="flex">
+      <div class="flex flex-wrap">
         <label for="hair_visible">
           <input type="checkbox" id="hair_visible" checked />
           Hair Visible
@@ -65,12 +77,12 @@
         <select name="color" id="color"></select>
         <input type="file" accept="image/*" />
       </div>
-      <div class="flex items-start">
-        <img class="sample" src="./assets/測試用圖_改色.jpg" alt="" style="border: 1px solid black" />
-        <div class="segment" style="border: 1px solid black">
-          <canvas class="removed"></canvas>
-          <img src="" crossorigin="anonymous" title="Click to get segmentation!" />
+      <div class="flex items-start flex-col" style="width: 100%; max-width: 375px; margin: 0 auto">
+        <div class="segment w-full" style="border: 1px solid black">
+          <canvas class="removed w-full"></canvas>
+          <img src="" class="w-full" crossorigin="anonymous" title="Click to get segmentation!" />
         </div>
+        <img class="sample w-full" src="./assets/測試用圖_改色.jpg" alt="" style="border: 1px solid black" />
       </div>
     </section>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
