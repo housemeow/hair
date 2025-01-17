@@ -50,14 +50,18 @@
     <section id="demos" class="invisible">
       <!-- checkbox for hide canvas / show canvas -->
       <div class="flex">
-        <label for="visible"
-          >Visible:
-          <input type="checkbox" id="visible" checked />
+        <label for="hair_visible">
+          <input type="checkbox" id="hair_visible" checked />
+          Hair Visible
         </label>
-        <select name="renderMode" id="renderMode">
+        <label for="model_visible">
+          <input type="checkbox" id="model_visible" checked />
+          Model Visible
+        </label>
+        <!-- <select name="renderMode" id="renderMode">
           <option value="category">Category</option>
           <option value="confidence">Confidence</option>
-        </select>
+        </select> -->
         <select name="color" id="color"></select>
         <input type="file" accept="image/*" />
       </div>
@@ -424,7 +428,8 @@
 
       // Get DOM elements
       const $demosSection = $("#demos");
-      const $visible = $("#visible");
+      const $hairVisible = $("#hair_visible");
+      const $modelVisible = $("#model_visible");
       const $color = $("#color");
       const $renderMode = $("#renderMode");
       const $fileInput = $('input[type="file"]');
@@ -492,11 +497,19 @@
         $(".segment canvas").removeClass("removed");
       });
 
-      $visible.on("change", function () {
+      $hairVisible.on("change", function () {
         if (this.checked) {
           $(".segment canvas").removeClass("removed");
         } else {
           $(".segment canvas").addClass("removed");
+        }
+      });
+
+      $modelVisible.on("change", function () {
+        if (this.checked) {
+          $(".segment img").css("opacity", 1);
+        } else {
+          $(".segment img").css("opacity", 0);
         }
       });
 
