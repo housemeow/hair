@@ -336,10 +336,10 @@
           const mask = this.segment.categoryMask.getAsUint8Array();
           for (let i = 0; i < mask.length; i++) {
             if (mask[i] === 0) continue;
-            imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
-            imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
-            imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
-            imageData[i * 4 + 3] = (this.hairColor[3] + imageData[i * 4 + 3]) / 2;
+            imageData[i * 4] = this.hairColor[0];
+            imageData[i * 4 + 1] = this.hairColor[1];
+            imageData[i * 4 + 2] = this.hairColor[2];
+            imageData[i * 4 + 3] = this.hairColor[3];
           }
         }
 
@@ -359,11 +359,10 @@
               }
             }
             const ratio = getRatio(value, this.confidenceThreshold1, this.confidenceThreshold2);
-            console.log({ ratio, value, threshold1: this.confidenceThreshold1, threshold2: this.confidenceThreshold2 });
-            imageData[i * 4] = (this.hairColor[0] + imageData[i * 4]) / 2;
-            imageData[i * 4 + 1] = (this.hairColor[1] + imageData[i * 4 + 1]) / 2;
-            imageData[i * 4 + 2] = (this.hairColor[2] + imageData[i * 4 + 2]) / 2;
-            imageData[i * 4 + 3] = ((this.hairColor[3] + imageData[i * 4 + 3]) / 2) * ratio;
+            imageData[i * 4] = this.hairColor[0];
+            imageData[i * 4 + 1] = this.hairColor[1];
+            imageData[i * 4 + 2] = this.hairColor[2];
+            imageData[i * 4 + 3] = this.hairColor[3] * ratio;
           }
         }
 
