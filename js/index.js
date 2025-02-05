@@ -116,6 +116,7 @@ $modelVisible.on("change", function () {
 // 設定 .segment img 的 src 與 .sample 的 src 一樣
 $segmentImg.attr("src", $sampleImg.attr("src"));
 await hairProcessor.loadModel();
+console.log("loaded");
 await hairProcessor.render(true);
 
 $demosSection.removeClass("invisible");
