@@ -4,6 +4,40 @@ import {
   FilesetResolver,
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2";
 
+import Rect from "./rect.js";
+
+const CATEGORY_HAIR = 1;
+
+class CanvasRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+  }
+
+  clear() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+  resize(width, height) {}
+
+  render(imageData) {
+    const uint8Array = new Uint8ClampedArray(imageData.buffer);
+    const newImageData = new ImageData(
+      uint8Array,
+      this.canvas.width,
+      this.canvas.height
+    );
+    this.ctx.putImageData(newImageData, 0, 0);
+  }
+
+  drawImage(img, x, y, width, height) {
+    this.ctx.drawImage(img, x, y, width, height);
+  }
+
+  drawImageCropped(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
+    this.ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+  }
+}
+
 class HairProcessor {
   /**
    * 1. load model
@@ -76,15 +110,15 @@ class HairProcessor {
   }
 
   async loadModel() {
+    this.audio = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
+    );
     await this.loadSegmenter();
     await this.loadObjectDetector();
   }
 
   async loadSegmenter() {
-    const audio = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
-    );
-    this.imageSegmenter = await ImageSegmenter.createFromOptions(audio, {
+    this.imageSegmenter = await ImageSegmenter.createFromOptions(this.audio, {
       baseOptions: {
         modelAssetPath:
           "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite",
@@ -98,10 +132,7 @@ class HairProcessor {
   }
 
   async loadObjectDetector() {
-    const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
-    );
-    this.objectDetector = await ObjectDetector.createFromOptions(vision, {
+    this.objectDetector = await ObjectDetector.createFromOptions(this.audio, {
       baseOptions: {
         modelAssetPath: `https://storage.googleapis.com/mediapipe-tasks/object_detector/efficientdet_lite0_uint8.tflite`,
       },
@@ -115,53 +146,20 @@ class HairProcessor {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  async _createSegment() {
-    this.segment = await new Promise((resolve) => {
-      this.imageSegmenter.segment(this.img, (result) => resolve(result));
-    });
+  _renderToCanvas(imageData, width, height) {
+    const uint8Array = new Uint8ClampedArray(imageData.buffer);
+    const newImageData = new ImageData(uint8Array, width, height);
+    this.ctx.putImageData(newImageData, 0, 0);
+  }
 
-    let left = -1;
-    let top = -1;
-    let right = -1;
-    let bottom = -1;
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        const index = x + y * this.width;
-        const mask = this.segment.categoryMask.getAsUint8Array();
-        const value = mask[index];
-        if (value === 1) {
-          if (left === -1) {
-            left = x;
-          } else {
-            left = Math.min(left, x);
-          }
-          if (top === -1) {
-            top = y;
-          } else {
-            top = Math.min(top, y);
-          }
-          if (right === -1) {
-            right = x;
-          } else {
-            right = Math.max(right, x);
-          }
-          if (bottom === -1) {
-            bottom = y;
-          } else {
-            bottom = Math.max(bottom, y);
-          }
-          break;
-        }
-      }
-    }
-    this.hairRect = {
-      left,
-      top,
-      right,
-      bottom,
-      width: right - left,
-      height: bottom - top,
-    };
+  _createRegion() {
+    const { width, height } = this.segment.categoryMask;
+    this.hairRect = Rect.bufferToRect(
+      this.segment.categoryMask.getAsUint8Array(),
+      width,
+      height,
+      (value) => value === CATEGORY_HAIR
+    );
     const detections = this.objectDetector.detect(this.img);
     this.personRects = detections.detections
       .filter((detection) =>
@@ -169,29 +167,22 @@ class HairProcessor {
           (category) => category.categoryName === "person"
         )
       )
-      .map((detection) => detection.boundingBox)
       .map((detection) => {
         return {
-          left: detection.originX,
-          top: detection.originY,
-          right: detection.originX + detection.width,
-          bottom: detection.originY + detection.height,
-          width: detection.width,
-          height: detection.height,
+          left: detection.boundingBox.originX,
+          top: detection.boundingBox.originY,
+          right: detection.boundingBox.originX + detection.boundingBox.width,
+          bottom: detection.boundingBox.originY + detection.boundingBox.height,
         };
       });
-    this.unionRect = [this.hairRect, ...this.personRects].reduce(
-      (acc, rect) => {
-        acc.left = Math.min(acc.left, rect.left);
-        acc.top = Math.min(acc.top, rect.top);
-        acc.right = Math.max(acc.right, rect.right);
-        acc.bottom = Math.max(acc.bottom, rect.bottom);
-        return acc;
-      },
-      { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }
-    );
-    this.unionRect.width = this.unionRect.right - this.unionRect.left;
-    this.unionRect.height = this.unionRect.bottom - this.unionRect.top;
+    this.unionRect = Rect.union([this.hairRect, ...this.personRects]);
+  }
+
+  async _createSegment() {
+    this.segment = await new Promise((resolve) => {
+      this.imageSegmenter.segment(this.img, (result) => resolve(result));
+    });
+    this._createRegion();
   }
 
   _renderHairCategory(imageData) {
@@ -206,7 +197,8 @@ class HairProcessor {
   }
 
   _renderHairConfidence(imageData) {
-    const confidence = this.segment.confidenceMasks[1].getAsFloat32Array();
+    const confidence =
+      this.segment.confidenceMasks[CATEGORY_HAIR].getAsFloat32Array();
     for (let i = 0; i < confidence.length; i++) {
       const value = confidence[i];
       if (value < this.confidenceThreshold1) continue;
@@ -232,12 +224,6 @@ class HairProcessor {
     }
   }
 
-  _renderToCanvas(imageData, width, height) {
-    const uint8Array = new Uint8ClampedArray(imageData.buffer);
-    const newImageData = new ImageData(uint8Array, width, height);
-    this.ctx.putImageData(newImageData, 0, 0);
-  }
-
   async crop() {
     this._clearCanvas();
     this.canvas.width = this.unionRect.width;
@@ -258,21 +244,34 @@ class HairProcessor {
     this._clearCanvas();
   }
 
-  async render(crop) {
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
-    this._clearCanvas();
-
-    if (false && crop) {
+  async _createMask(crop) {
+    if (crop) {
       await this._createSegment();
       await this.crop();
       this.canvas.width = this.unionRect.width;
       this.canvas.height = this.unionRect.height;
       await this._createSegment();
-    } else {
-      if (!this.segment) {
-        await this._createSegment();
-      }
+      return;
+    }
+    if (!this.segment) {
+      await this._createSegment();
+    }
+  }
+
+  async render(crop) {
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+    this._clearCanvas();
+
+    this._createMask(crop);
+    if (crop) {
+      await this._createSegment();
+      await this.crop();
+      this.canvas.width = this.unionRect.width;
+      this.canvas.height = this.unionRect.height;
+      await this._createSegment();
+    } else if (!this.segment) {
+      await this._createSegment();
     }
 
     const { width, height } = this.segment.categoryMask;
