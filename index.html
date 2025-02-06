@@ -75,7 +75,14 @@
           <option value="confidence">Confidence</option>
         </select> -->
         <select name="color" id="color"></select>
-        <input type="file" accept="image/*" />
+        <label for="file">
+          Select:
+          <input id="file" type="file" accept="image/*" />
+        </label>
+        <label for="selfie">
+          Selfie:
+          <input id="selfie" type="file" capture="user" accept="image/*" />
+        </label>
         <label for="blur"
           >Blur: <span class="blur-text">2</span
           ><input id="blur" type="range" id="threshold" min="0" max="20" step="1" value="2"
