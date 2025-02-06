@@ -15,6 +15,8 @@ const $renderMode = $("#renderMode");
 const $fileInput = $('input[type="file"]');
 const $sampleImg = $(".sample");
 const $segmentImg = $(".segment img");
+const $blurText = $(".blur-text");
+const $blur = $("input#blur");
 
 const database = new Database(COLOR_DATABASE, CONFIG_DATABASE);
 
@@ -33,6 +35,16 @@ colors.forEach((color, index) => {
   );
 });
 
+$blur.on("change", function () {
+  const value = parseInt(this.value);
+  console.log("blur: ", value);
+  $blurText.text(value);
+  hairProcessor.setBlur(value);
+  $(".segment canvas").addClass("removed");
+  hairProcessor.render();
+  $(".segment canvas").removeClass("removed");
+});
+
 const hairProcessor = new HairProcessor({
   hairColor: colors[selectedColorIndex].color,
   renderMode: "confidence",
@@ -40,6 +52,7 @@ const hairProcessor = new HairProcessor({
   confidenceThreshold2: config.confidenceThreshold2,
   originalImg: $sampleImg.get(0),
   img: $(".segment img").get(0),
+  blur: parseInt($blur.val()),
   canvas: $(".segment canvas").get(0),
 });
 $renderMode.val(hairProcessor.renderMode);

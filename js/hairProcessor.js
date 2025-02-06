@@ -23,6 +23,7 @@ class HairProcessor {
       confidenceThreshold2,
       originalImg,
       img,
+      blur,
       canvas,
     } = options;
 
@@ -34,6 +35,7 @@ class HairProcessor {
     this.setImg(img);
     this.setOriginalImg(originalImg);
     this.setCanvas(canvas);
+    this.setBlur(blur || 0);
     this.imageSegmenter = null;
     this.objectDetector = null;
     this.labels = null;
@@ -43,6 +45,10 @@ class HairProcessor {
   setCanvas(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
+  }
+
+  setBlur(blur) {
+    this.blur = blur;
   }
 
   async setOriginalImg(img) {
@@ -124,7 +130,27 @@ class HairProcessor {
   _renderToCanvas(imageData, width, height) {
     const uint8Array = new Uint8ClampedArray(imageData.buffer);
     const newImageData = new ImageData(uint8Array, width, height);
-    this.ctx.putImageData(newImageData, 0, 0);
+    // this.ctx.shadowBlur = 10;
+    // 在畫布上應用模糊
+    // this.ctx.filter = "blur(50px)"; // 設定模糊程度
+
+    // 創建暫存 Canvas
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d");
+
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+
+    // 把圖像畫到暫存 Canvas
+    tempCtx.putImageData(newImageData, 0, 0);
+
+    // 將模糊後的影像畫回主 Canvas
+    this.ctx.filter = `blur(${this.blur}px)`; // 設定模糊程度
+    this.ctx.drawImage(tempCanvas, 0, 0);
+    this.ctx.filter = "none"; // 清除 filter 避免影響後續繪圖
+
+    // this.ctx.putImageData(newImageData, 0, 0);
+    // this.ctx.filter = "none"; // 重置模糊
   }
 
   _createRegion(crop) {
