@@ -8,36 +8,6 @@ import Rect from "./rect.js";
 
 const CATEGORY_HAIR = 1;
 
-class CanvasRenderer {
-  constructor(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-  }
-
-  clear() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-  resize(width, height) {}
-
-  render(imageData) {
-    const uint8Array = new Uint8ClampedArray(imageData.buffer);
-    const newImageData = new ImageData(
-      uint8Array,
-      this.canvas.width,
-      this.canvas.height
-    );
-    this.ctx.putImageData(newImageData, 0, 0);
-  }
-
-  drawImage(img, x, y, width, height) {
-    this.ctx.drawImage(img, x, y, width, height);
-  }
-
-  drawImageCropped(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
-    this.ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-  }
-}
-
 class HairProcessor {
   /**
    * 1. load model
@@ -75,14 +45,19 @@ class HairProcessor {
     this.ctx = canvas.getContext("2d");
   }
 
-  setOriginalImg(img) {
+  async setOriginalImg(img) {
     this.originalImg = img;
     this.width = img.naturalWidth;
     this.height = img.naturalHeight;
 
-    this.img.setAttribute("src", img.getAttribute("src"));
-    this.segment = null;
-    console.log({ width: this.width, height: this.height });
+    return new Promise((resolve) => {
+      this.img.setAttribute("src", img.getAttribute("src"));
+      console.log({ width: this.width, height: this.height });
+      this.img.onload = () => {
+        this.segment = null;
+        resolve();
+      };
+    });
   }
 
   setImg(img) {
@@ -152,7 +127,7 @@ class HairProcessor {
     this.ctx.putImageData(newImageData, 0, 0);
   }
 
-  _createRegion() {
+  _createRegion(crop) {
     const { width, height } = this.segment.categoryMask;
     this.hairRect = Rect.bufferToRect(
       this.segment.categoryMask.getAsUint8Array(),
@@ -160,29 +135,36 @@ class HairProcessor {
       height,
       (value) => value === CATEGORY_HAIR
     );
-    const detections = this.objectDetector.detect(this.img);
-    this.personRects = detections.detections
-      .filter((detection) =>
-        detection.categories.some(
-          (category) => category.categoryName === "person"
+    if (crop) {
+      const detections = this.objectDetector.detect(this.img);
+      console.log({ detections });
+      this.personRects = detections.detections
+        .filter((detection) =>
+          detection.categories.some(
+            (category) => category.categoryName === "person"
+          )
         )
-      )
-      .map((detection) => {
-        return {
-          left: detection.boundingBox.originX,
-          top: detection.boundingBox.originY,
-          right: detection.boundingBox.originX + detection.boundingBox.width,
-          bottom: detection.boundingBox.originY + detection.boundingBox.height,
-        };
-      });
-    this.unionRect = Rect.union([this.hairRect, ...this.personRects]);
+        .map((detection) => {
+          return {
+            left: detection.boundingBox.originX,
+            top: detection.boundingBox.originY,
+            right: detection.boundingBox.originX + detection.boundingBox.width,
+            bottom:
+              detection.boundingBox.originY + detection.boundingBox.height,
+          };
+        });
+      console.log({ hairRect: this.hairRect, personRects: this.personRects });
+      this.unionRect = Rect.union([this.hairRect, ...this.personRects]);
+    } else {
+      this.unionRect = this.hairRect;
+    }
   }
 
-  async _createSegment() {
+  async _createSegment(crop) {
     this.segment = await new Promise((resolve) => {
       this.imageSegmenter.segment(this.img, (result) => resolve(result));
     });
-    this._createRegion();
+    this._createRegion(crop);
   }
 
   _renderHairCategory(imageData) {
@@ -246,15 +228,13 @@ class HairProcessor {
 
   async _createMask(crop) {
     if (crop) {
-      await this._createSegment();
+      await this._createSegment(crop);
       await this.crop();
       this.canvas.width = this.unionRect.width;
       this.canvas.height = this.unionRect.height;
-      await this._createSegment();
-      return;
-    }
-    if (!this.segment) {
-      await this._createSegment();
+      await this._createSegment(crop);
+    } else if (!this.segment) {
+      await this._createSegment(crop);
     }
   }
 
@@ -263,16 +243,7 @@ class HairProcessor {
     this.canvas.height = this.height;
     this._clearCanvas();
 
-    this._createMask(crop);
-    if (crop) {
-      await this._createSegment();
-      await this.crop();
-      this.canvas.width = this.unionRect.width;
-      this.canvas.height = this.unionRect.height;
-      await this._createSegment();
-    } else if (!this.segment) {
-      await this._createSegment();
-    }
+    await this._createMask(crop);
 
     const { width, height } = this.segment.categoryMask;
     const imageData = this.ctx.getImageData(0, 0, width, height).data;
