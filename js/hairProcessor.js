@@ -149,6 +149,8 @@ class HairProcessor {
     this.ctx.drawImage(tempCanvas, 0, 0);
     this.ctx.filter = "none"; // 清除 filter 避免影響後續繪圖
 
+    tempCanvas.remove();
+
     // this.ctx.putImageData(newImageData, 0, 0);
     // this.ctx.filter = "none"; // 重置模糊
   }
