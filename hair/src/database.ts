@@ -12,7 +12,7 @@ class Database {
       .then((data) => {
         const [header, ...rows] = data.split("\r\n");
 
-        const headerMap = {} as Record<string, number>;
+        const headerMap: Record<string, number> = {};
         // 產品名稱	色系	R	G	B	色彩增值alpha
         headerMap.nameIndex = header
           .split("\t")
@@ -41,7 +41,9 @@ class Database {
           const r = parseInt(cells[headerMap.rIndex]);
           const g = parseInt(cells[headerMap.gIndex]);
           const b = parseInt(cells[headerMap.bIndex]);
-          const a = 255 * (parseFloat(cells[headerMap.aIndex].replace("%", "")) / 100);
+          const a = Math.floor(
+            255 * (parseFloat(cells[headerMap.aIndex].replace("%", "")) / 100)
+          );
           return {
             name: cells[headerMap.nameIndex],
             category: cells[headerMap.categoryIndex],

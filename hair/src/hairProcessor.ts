@@ -5,6 +5,12 @@ import {
   ImageSegmenterResult,
 } from "@mediapipe/tasks-vision";
 
+import CanvasRenderer from "./canvasRenderer";
+import Rect from "./rect";
+
+const CATEGORY_HAIR = 1;
+
+type WasmFileset = Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>>
 type RunningMode = "IMAGE" | "VIDEO";
 type RenderMode = "category" | "confidence";
 
@@ -15,34 +21,37 @@ interface HairProcessorOptions {
   confidenceThreshold2: number;
   originalImg: HTMLImageElement;
   img: HTMLImageElement;
+  blur: number;
   canvas: HTMLCanvasElement;
 }
 
 class HairProcessor {
-  confidenceThreshold1: number;
-  confidenceThreshold2: number;
-  isCrop: boolean;
-  imageSegmenter?: ImageSegmenter;
-  objectDetector?: ObjectDetector;
-  labels: string[];
-  runningMode: RunningMode;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D | null;
-  originalImg?: HTMLImageElement;
-  width: any;
-  height: any;
-  img?: HTMLImageElement;
-  segment?: ImageSegmenterResult;
-  renderMode: any;
-  hairColor: any;
-  hairRect: { left: number; top: number; right: number; bottom: number; width: number; height: number; };
-  unionRect: any;
   /**
    * 1. load model
    * 2. segment
    * 3. render original or cropped to img
    * 4. render hair to canvas
    */
+  confidenceThreshold1: number;
+  confidenceThreshold2: number;
+  isCrop: boolean;
+  imageSegmenter!: ImageSegmenter;
+  objectDetector!: ObjectDetector;
+  runningMode: RunningMode;
+  canvasRenderer: CanvasRenderer;
+  originalImg!: HTMLImageElement;
+  width!: number;
+  height!: number;
+  blur!: number;
+  img!: HTMLImageElement;
+  segment?: ImageSegmenterResult;
+  renderMode!: RenderMode;
+  hairColor: any;
+  hairRect: Rect;
+  unionRect: any;
+  audio!: WasmFileset;
+  personRects!: Rect[];
+
   constructor(options: HairProcessorOptions) {
     const {
       hairColor,
@@ -51,6 +60,7 @@ class HairProcessor {
       confidenceThreshold2,
       originalImg,
       img,
+      blur,
       canvas,
     } = options;
 
@@ -59,21 +69,36 @@ class HairProcessor {
     this.isCrop = false;
     this.setColor(hairColor);
     this.setRenderMode(renderMode);
+    this.canvasRenderer = new CanvasRenderer(canvas);
     this.setImg(img);
     this.setOriginalImg(originalImg);
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.labels = [];
+    this.setBlur(blur);
     this.runningMode = "IMAGE";
+    this.hairRect = new Rect()
   }
 
-  setOriginalImg(img: HTMLImageElement) {
+  setBlur(blur: number) {
+    this.blur = blur;
+  }
+
+  async setOriginalImg(img: HTMLImageElement) {
     this.originalImg = img;
     this.width = img.naturalWidth;
     this.height = img.naturalHeight;
 
-    this.img.setAttribute("src", img.getAttribute("src"));
-    console.log({ width: this.width, height: this.height });
+    return new Promise<void>((resolve) => {
+      if (this.img) {
+        this.img.onload = () => {
+          this.segment = undefined;
+          this.canvasRenderer.setSize(this.width, this.height);
+          resolve();
+        };
+        this.canvasRenderer.clear();
+        this.img.setAttribute("src", img.getAttribute("src") || '');
+        return;
+      }
+      resolve()
+    });
   }
 
   setImg(img: HTMLImageElement) {
@@ -101,32 +126,30 @@ class HairProcessor {
   }
 
   async loadModel() {
+    this.audio = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
+      // '/wasm'
+    );
     await this.loadSegmenter();
     await this.loadObjectDetector();
   }
 
   async loadSegmenter() {
-    const audio = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
-    );
-    this.imageSegmenter = await ImageSegmenter.createFromOptions(audio, {
+    this.imageSegmenter = await ImageSegmenter.createFromOptions(this.audio, {
       baseOptions: {
         modelAssetPath:
           "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite",
-        delegate: "GPU",
+        // delegate: "GPU",
+        delegate: "CPU",
       },
       runningMode: this.runningMode,
       outputCategoryMask: true,
       outputConfidenceMasks: false,
     });
-    this.labels = this.imageSegmenter.getLabels();
   }
 
   async loadObjectDetector() {
-    const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-    );
-    this.objectDetector = await ObjectDetector.createFromOptions(vision, {
+    this.objectDetector = await ObjectDetector.createFromOptions(this.audio, {
       baseOptions: {
         modelAssetPath: `https://storage.googleapis.com/mediapipe-tasks/object_detector/efficientdet_lite0_uint8.tflite`,
       },
@@ -135,38 +158,77 @@ class HairProcessor {
     });
   }
 
-  _clearCanvas() {
-    this.ctx?.drawImage(this.img!, 0, 0, this.canvas.width, this.canvas.height);
-    this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  _renderToCanvas(imageData: ImageData) {
+    // 創建暫存 Canvas
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCanvas.width = this.width;
+    tempCanvas.height = this.height;
+    // 把圖像畫到暫存 Canvas
+    tempCtx!.putImageData(imageData, 0, 0);
+
+    // 將模糊後的影像畫回主 Canvas
+    this.canvasRenderer.renderBlurImage(tempCanvas, this.blur);
+
+    tempCanvas.remove();
   }
 
-  async _createSegment(): Promise<ImageSegmenterResult> {
-    return await new Promise((resolve) => {
-      const load = () => {
-        if (!this.originalImg) return
-        this.imageSegmenter?.segment(this.originalImg, (result) => resolve(result));
-        this.originalImg?.removeEventListener('load', load)
-      }
-      this.originalImg?.addEventListener('load', load)
-      this.originalImg?.setAttribute('src', this.originalImg?.getAttribute('src') || '')
-      console.log(this.originalImg?.getAttribute('src'))
-    });
-  }
-
-  _renderHairCategory(imageData: Uint8ClampedArray<ArrayBufferLike>) {
-    console.log('render category')
-    const mask = this.segment.categoryMask.getAsUint8Array();
-    for (let i = 0; i < mask.length; i++) {
-      if (mask[i] === 0) continue;
-      imageData[i * 4] = this.hairColor[0];
-      imageData[i * 4 + 1] = this.hairColor[1];
-      imageData[i * 4 + 2] = this.hairColor[2];
-      imageData[i * 4 + 3] = this.hairColor[3];
+  _createRegion(crop: boolean) {
+    const { width, height } = this.segment!.categoryMask!;
+    this.hairRect = Rect.bufferToRect(
+      this.segment!.categoryMask!.getAsUint8Array(),
+      width,
+      height,
+      (value) => value === CATEGORY_HAIR
+    );
+    if (crop) {
+      const detections = this.objectDetector.detect(this.img);
+      console.log({ detections });
+      this.personRects = detections.detections
+        .filter((detection) =>
+          detection.categories.some(
+            (category) => category.categoryName === "person"
+          )
+        )
+        .map((detection) => {
+          return {
+            left: detection.boundingBox!.originX,
+            top: detection.boundingBox!.originY,
+            right: detection.boundingBox!.originX + detection.boundingBox!.width,
+            bottom:
+              detection.boundingBox!.originY + detection.boundingBox!.height,
+            width: detection.boundingBox!.width,
+            height: detection.boundingBox!.height,
+          };
+        });
+      console.log({ hairRect: this.hairRect, personRects: this.personRects });
+      this.unionRect = Rect.union([this.hairRect, ...this.personRects]);
+    } else {
+      this.unionRect = this.hairRect;
     }
   }
 
-  _renderHairConfidence(imageData: Uint8ClampedArray<ArrayBufferLike>) {
-    const confidence = this.segment.confidenceMasks[1].getAsFloat32Array();
+  async _createSegment(crop: boolean) {
+    this.segment = await new Promise((resolve) => {
+      this.imageSegmenter.segment(this.img, (result) => resolve(result));
+    });
+    this._createRegion(crop);
+  }
+
+  _renderHairCategory(imageData: ImageData) {
+    const mask = this.segment!.categoryMask!.getAsUint8Array();
+    for (let i = 0; i < mask.length; i++) {
+      if (mask[i] === 0) continue;
+      imageData.data[i * 4] = this.hairColor[0];
+      imageData.data[i * 4 + 1] = this.hairColor[1];
+      imageData.data[i * 4 + 2] = this.hairColor[2];
+      imageData.data[i * 4 + 3] = this.hairColor[3];
+    }
+  }
+
+  _renderHairConfidence(imageData: ImageData) {
+    const confidence =
+      this.segment!.confidenceMasks![CATEGORY_HAIR].getAsFloat32Array();
     for (let i = 0; i < confidence.length; i++) {
       const value = confidence[i];
       if (value < this.confidenceThreshold1) continue;
@@ -185,63 +247,52 @@ class HairProcessor {
         this.confidenceThreshold1,
         this.confidenceThreshold2
       );
-      imageData[i * 4] = this.hairColor[0];
-      imageData[i * 4 + 1] = this.hairColor[1];
-      imageData[i * 4 + 2] = this.hairColor[2];
-      imageData[i * 4 + 3] = this.hairColor[3] * ratio;
+      imageData.data[i * 4] = this.hairColor[0];
+      imageData.data[i * 4 + 1] = this.hairColor[1];
+      imageData.data[i * 4 + 2] = this.hairColor[2];
+      imageData.data[i * 4 + 3] = this.hairColor[3] * ratio;
     }
   }
 
-  _renderToCanvas(imageData: Uint8ClampedArray<ArrayBufferLike>, width: number, height: number) {
-    const uint8Array = new Uint8ClampedArray(imageData.buffer);
-    const newImageData = new ImageData(uint8Array, width, height);
-    console.log({ width, height, newImageData })
-    this.ctx?.putImageData(newImageData, 0, 0);
+  async crop() {
+    this.canvasRenderer.clear();
+    this.canvasRenderer.setSize(this.unionRect.width, this.unionRect.height);
+    this.canvasRenderer.drawImage(this.originalImg, this.unionRect);
+    const croppedImage = this.canvasRenderer.getImage();
+    await this.setImgSrc(croppedImage);
+    this.canvasRenderer.clear();
   }
 
-  async render(crop: boolean) {
-    this.ctx?.fillRect(25, 25, 100, 100);
-    this.ctx?.clearRect(45, 45, 60, 60);
-    this.ctx?.strokeRect(50, 50, 50, 50);
-
-    const segment = await this._createSegment()
-    console.log(segment)
-
-    if (!segment.categoryMask) {
-      return
+  async _createMask(crop: boolean) {
+    if (crop) {
+      await this._createSegment(crop);
+      await this.crop();
+      this.canvasRenderer.setSize(this.unionRect.width, this.unionRect.height);
+      await this._createSegment(crop);
+    } else if (!this.segment) {
+      await this._createSegment(crop);
     }
-    if (!this.ctx) {
-      return
+  }
+
+  async render(crop: boolean = false) {
+    console.log('1')
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    await this._createMask(crop);
+    console.log('2')
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    const imageData = this.canvasRenderer.getImageData();
+
+    if (this.renderMode === "category") {
+      this._renderHairCategory(imageData);
+    } else {
+      this._renderHairConfidence(imageData);
     }
 
-    const { width, height } = segment.categoryMask;
-    this.canvas.width = width
-    this.canvas.height = height
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    let imageData = this.ctx.getImageData(0, 0, width, height).data;
-    const mask = segment.categoryMask.getAsUint8Array();
-
-    let counter = 0;
-    for (let i = 0; i < mask.length; i++) {
-      if (mask[i] === 0) continue;
-
-      counter++;
-
-      // imageData[i * 4] = this.hairColor[0];
-      // imageData[i * 4 + 1] = this.hairColor[1];
-      // imageData[i * 4 + 2] = this.hairColor[2];
-      // imageData[i * 4 + 3] = this.hairColor[3];
-      imageData[i * 4] = 255;
-      imageData[i * 4 + 1] = 0;
-      imageData[i * 4 + 2] = 0;
-      imageData[i * 4 + 3] = 255;
-    }
-    console.log({ counter })
-    // this._renderToCanvas(imageData, width, height)
-    const uint8Array = new Uint8ClampedArray(imageData.buffer);
-    const dataNew = new ImageData(uint8Array, width, height);
-    this.ctx.putImageData(dataNew, 0, 0);
-
+    this.canvasRenderer.clear();
+    this._renderToCanvas(imageData);
+    console.log('3')
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
   }
 }
+
 export default HairProcessor;

@@ -4,6 +4,7 @@ import Database from "@/database";
 import defaultImg from "@/assets/測試用圖_改色.jpg";
 import HairProcessor from "@/hairProcessor";
 import COLORS from '@/colors.json'
+import CanvasRenderer from "./canvasRenderer";
 
 const COLOR_DATABASE =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFFONBmJrC2GaZpGYI_gjXPWnOizakJK6l5AkXyZ7NxzBhkTaejfLEQTnjpUFrR3ZR_MD3UdNJhSEj/pub?gid=0&single=true&output=tsv";
@@ -11,7 +12,7 @@ const CONFIG_DATABASE =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFFONBmJrC2GaZpGYI_gjXPWnOizakJK6l5AkXyZ7NxzBhkTaejfLEQTnjpUFrR3ZR_MD3UdNJhSEj/pub?gid=237858754&single=true&output=tsv";
 
 const database = new Database(COLOR_DATABASE, CONFIG_DATABASE);
-let hairProcessor: HairProcessor
+let hairProcessor = ref<HairProcessor>();
 
 const isHairProcessorLoading = ref(false);
 const isDatabaseLoading = ref(false);
@@ -27,53 +28,63 @@ const originalImgRef = ref<HTMLImageElement>();
 const hairVisible = ref(true);
 const modelVisible = ref(true);
 const selectedColor = ref<number[]>([]);
+const blur = ref(2)
 const imgSrc = ref(defaultImg);
 
 const load = async () => {
   isDatabaseLoading.value = true
-  // const data = await database.load()
-  // colors.value = data.colors
+  const data = await database.load()
+  colors.value = data.colors
   selectedColor.value = colors.value[0].color
   isDatabaseLoading.value = false
 }
 
 watch(() => selectedColor.value, async () => {
   console.log(selectedColor.value)
-  if (hairProcessor) {
-    hairProcessor.hairColor = selectedColor.value
-    await hairProcessor.render(true)
+  if (hairProcessor.value) {
+    hairProcessor.value!.setColor(selectedColor.value)
+    await hairProcessor.value!.render()
   }
 })
 
-// $fileInput.on("change", function (e) {
-//   const file = e.target.files[0];
-//   if (file) {
-//     const reader = new FileReader();
-//     reader.onload = (e) => {
-//       $sampleImg.one("load", async () => {
-//         hairProcessor.setOriginalImg($sampleImg.get(0));
-//         await hairProcessor.render(true);
-//       });
-//       $sampleImg.attr("src", e.target.result);
-//     };
-//     reader.readAsDataURL(file);
-//   }
-// });
+watch(() => blur.value, async () => {
+  console.log('blur', blur.value)
+  hairProcessor.value!.setBlur(blur.value);
+  isHairProcessorLoading.value = true
+  await hairProcessor.value!.render();
+  isHairProcessorLoading.value = false
+});
 
 const onFileChange = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imgSrc.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+  if (!file) {
+    return;
   }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const resizedDataURL = await CanvasRenderer.getCroppedImage(
+      e.target!.result as string,
+      500
+    );
+    const load = async () => {
+      await hairProcessor.value!.setOriginalImg(originalImgRef.value as HTMLImageElement);
+      await hairProcessor.value!.render(true);
+
+      originalImgRef.value?.removeEventListener('load', load)
+    }
+    originalImgRef.value?.addEventListener('load', load)
+
+    // 設定新圖片
+    imgSrc.value = resizedDataURL;
+  };
+
+  reader.readAsDataURL(file);
 }
 
 onMounted(async () => {
+  await load()
   isHairProcessorLoading.value = true;
-  hairProcessor = new HairProcessor({
+  hairProcessor.value = new HairProcessor({
     canvas: canvasRef.value as HTMLCanvasElement,
     confidenceThreshold1: 0.5,
     confidenceThreshold2: 0.7,
@@ -81,18 +92,17 @@ onMounted(async () => {
     img: imgRef.value as HTMLImageElement,
     originalImg: originalImgRef.value as HTMLImageElement,
     renderMode: "category",
+    blur: blur.value,
   })
   console.log(
     canvasRef.value,
     imgRef.value,
     originalImgRef.value
   )
-  await hairProcessor.loadModel();
-  await hairProcessor.render(true);
+  await hairProcessor.value!.loadModel();
+  await hairProcessor.value!.render(true);
   isHairProcessorLoading.value = false;
 })
-
-load()
 </script>
 
 <template>
@@ -114,12 +124,25 @@ load()
       <select name="color" id="color" v-model="selectedColor">
         <option v-for="color in colors" :value="color.color">{{color.name}}</option>
       </select>
-      <input type="file" accept="image/*" @change="onFileChange" />
+      <label for="file">
+          Select:
+          <input id="file" type="file" accept="image/*" @change="onFileChange" />
+        </label>
+        <label for="selfie">
+          Selfie:
+          <input id="selfie" type="file" capture="user" accept="image/*" @change="onFileChange" />
+        </label>
+      <label for="blur"
+        >Blur: <span class="blur-text">{{ blur }}</span
+        ><input id="blur" type="range" min="0" max="20" step="1" v-model.number="blur"
+      /></label>
     </div>
     <div class="flex items-start flex-col" style="width: 100%; max-width: 375px; margin: 0 auto">
       <div class="segment w-full" style="border: 1px solid black">
-        <canvas ref="canvasRef" class="w-full" :class="{ removed: !hairVisible }"></canvas>
-        <img ref="imgRef" crossorigin="anonymous" src="" class="w-full" title="Click to get segmentation!" :class="{ removed: !modelVisible}" />
+        <canvas ref="canvasRef" class="w-full" :class="{ removed: !hairVisible }" :style="{filter: `blur(${blur}px)`}"></canvas>
+        <img ref="imgRef" crossorigin="anonymous" src="" class="w-full" title="Click to get segmentation!" :style="{
+          opacity: modelVisible ? 1 : 0,
+        }" />
       </div>
       <img
         ref="originalImgRef"
@@ -133,7 +156,7 @@ load()
   </section>
 </template>
 
-<style scoped>
+<style>
 canvas {
   clear: both;
   display: block;
