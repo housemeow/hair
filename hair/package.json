@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.20",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
@@ -30,6 +31,7 @@
     "jiti": "^2.4.2",
     "jsdom": "^26.0.0",
     "npm-run-all2": "^7.0.2",
+    "sass-embedded": "^1.83.4",
     "typescript": "~5.7.3",
     "vite": "^6.0.11",
     "vite-plugin-vue-devtools": "^7.7.0",
