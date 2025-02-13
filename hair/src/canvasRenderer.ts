@@ -1,20 +1,82 @@
 import type Rect from "./rect";
 
 class CanvasRenderer {
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D | null;
-  constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
+  ctx: CanvasRenderingContext2D;
+  constructor(ctx: CanvasRenderingContext2D) {
+    this.ctx = ctx
   }
 
   clear() {
-    this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+  }
+  static applyGaussianBlur(imageData: ImageData, width: number, height: number, sigma: number) {
+    const pixels = imageData.data;
+    const newPixels = new Uint8ClampedArray(pixels);
+
+    const radius = Math.ceil(sigma * 2); // 高斯半徑調整
+    const kernelSize = radius * 2 + 1;
+    const kernel = new Float32Array(kernelSize);
+    const sigmaSq = sigma * sigma;
+    let sum = 0;
+
+    // 計算高斯核
+    for (let i = 0; i < kernelSize; i++) {
+      const x = i - radius;
+      kernel[i] = Math.exp(-(x * x) / (2 * sigmaSq));
+      sum += kernel[i];
+    }
+
+    // 正規化
+    for (let i = 0; i < kernelSize; i++) {
+      kernel[i] /= sum;
+    }
+
+    // **水平方向模糊**
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let r = 0, g = 0, b = 0, a = 0;
+        for (let k = -radius; k <= radius; k++) {
+          const px = Math.min(width - 1, Math.max(0, x + k)); // 避免超出範圍
+          const idx = (y * width + px) * 4;
+          r += pixels[idx] * kernel[k + radius];
+          g += pixels[idx + 1] * kernel[k + radius];
+          b += pixels[idx + 2] * kernel[k + radius];
+          a += pixels[idx + 3] * kernel[k + radius];
+        }
+        const idx = (y * width + x) * 4;
+        newPixels[idx] = r;
+        newPixels[idx + 1] = g;
+        newPixels[idx + 2] = b;
+        newPixels[idx + 3] = a;
+      }
+    }
+
+    // **垂直方向模糊**
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        let r = 0, g = 0, b = 0, a = 0;
+        for (let k = -radius; k <= radius; k++) {
+          const py = Math.min(height - 1, Math.max(0, y + k)); // 避免超出範圍
+          const idx = (py * width + x) * 4;
+          r += newPixels[idx] * kernel[k + radius];
+          g += newPixels[idx + 1] * kernel[k + radius];
+          b += newPixels[idx + 2] * kernel[k + radius];
+          a += newPixels[idx + 3] * kernel[k + radius];
+        }
+        const idx = (y * width + x) * 4;
+        pixels[idx] = r;
+        pixels[idx + 1] = g;
+        pixels[idx + 2] = b;
+        pixels[idx + 3] = a;
+      }
+    }
+
+    return imageData;
   }
 
   drawImage(image: CanvasImageSource, rect?: Rect) {
     if (rect) {
-      this.ctx?.drawImage(
+      this.ctx.drawImage(
         image, // 原圖
         rect.left,
         rect.top,
@@ -26,13 +88,13 @@ class CanvasRenderer {
         rect.height // 畫布區域
       );
     } else {
-      this.ctx?.drawImage(image, 0, 0);
+      this.ctx.drawImage(image, 0, 0);
     }
   }
 
   setSize(width: number, height: number) {
-    this.canvas.width = width;
-    this.canvas.height = height;
+    this.ctx.canvas.width = width;
+    this.ctx.canvas.height = height;
   }
 
   static getCroppedImage(src: string, maxSize: number): Promise<string> {
@@ -58,15 +120,15 @@ class CanvasRenderer {
         let canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
-        let ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
+        let ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
 
         // 轉換為 DataURL
         const resizedDataURL = canvas.toDataURL("image/png");
 
         // 釋放 canvas 資源
-        ctx?.clearRect(0, 0, width, height);
-        ctx = null;
+        ctx.clearRect(0, 0, width, height);
+        ctx = null!;
         // **釋放 canvas 變數**
         canvas.remove();
         (canvas as unknown as null) = null;
@@ -84,20 +146,15 @@ class CanvasRenderer {
   }
 
   getImage() {
-    return this.canvas.toDataURL("image/png");
+    return this.ctx.canvas.toDataURL("image/png");
   }
 
   getImageData() {
-    return this.ctx?.getImageData(0, 0, this.canvas.width, this.canvas.height) as ImageData;
+    return this.ctx.getImageData(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
   }
 
-  renderBlurImage(canvas: HTMLCanvasElement, blur: number) {
-    if (!this.ctx) {
-      return
-    }
-    this.ctx.filter = `blur(${blur}px)`;
-    this.drawImage(canvas);
-    this.ctx.filter = "none";
+  putImageData(imageData: ImageData) {
+    this.ctx!.putImageData(imageData, 0, 0);
   }
 }
 

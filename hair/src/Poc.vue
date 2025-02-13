@@ -24,7 +24,6 @@ const colors = ref<{
 }[]> (COLORS)
 const canvasRef = ref<HTMLCanvasElement>();
 const imgRef = ref<HTMLImageElement>();
-const originalImgRef = ref<HTMLImageElement>();
 const hairVisible = ref(true);
 const modelVisible = ref(true);
 const selectedColor = ref<number[]>([]);
@@ -42,16 +41,16 @@ const load = async () => {
 watch(() => selectedColor.value, async () => {
   console.log(selectedColor.value)
   if (hairProcessor.value) {
-    hairProcessor.value!.setColor(selectedColor.value)
+    hairProcessor.value!.hairColor = selectedColor.value
     await hairProcessor.value!.render()
   }
 })
 
 watch(() => blur.value, async () => {
   console.log('blur', blur.value)
-  hairProcessor.value!.setBlur(blur.value);
   isHairProcessorLoading.value = true
-  await hairProcessor.value!.render();
+  hairProcessor.value!.blur = blur.value
+  await hairProcessor.value!.render()
   isHairProcessorLoading.value = false
 });
 
@@ -66,16 +65,9 @@ const onFileChange = (e: Event) => {
       e.target!.result as string,
       500
     );
-    const load = async () => {
-      await hairProcessor.value!.setOriginalImg(originalImgRef.value as HTMLImageElement);
-      await hairProcessor.value!.render(true);
-
-      originalImgRef.value?.removeEventListener('load', load)
-    }
-    originalImgRef.value?.addEventListener('load', load)
-
+    await hairProcessor.value!.updateSrc(resizedDataURL)
+    await hairProcessor.value!.render()
     // 設定新圖片
-    imgSrc.value = resizedDataURL;
   };
 
   reader.readAsDataURL(file);
@@ -85,22 +77,21 @@ onMounted(async () => {
   await load()
   isHairProcessorLoading.value = true;
   hairProcessor.value = new HairProcessor({
+    height: canvasRef.value?.clientWidth!,
+    width: canvasRef.value?.clientHeight!,
+    src: imgSrc.value,
     canvas: canvasRef.value as HTMLCanvasElement,
     confidenceThreshold1: 0.5,
     confidenceThreshold2: 0.7,
     hairColor: selectedColor.value,
     img: imgRef.value as HTMLImageElement,
-    originalImg: originalImgRef.value as HTMLImageElement,
     renderMode: "category",
     blur: blur.value,
   })
-  console.log(
-    canvasRef.value,
-    imgRef.value,
-    originalImgRef.value
-  )
   await hairProcessor.value!.loadModel();
-  await hairProcessor.value!.render(true);
+  await hairProcessor.value!.updateSrc(defaultImg)
+  await hairProcessor.value!.render()
+
   isHairProcessorLoading.value = false;
 })
 </script>
@@ -144,14 +135,6 @@ onMounted(async () => {
           opacity: modelVisible ? 1 : 0,
         }" />
       </div>
-      <img
-        ref="originalImgRef"
-        class="sample w-full"
-        crossorigin="anonymous"
-        :src="imgSrc"
-        alt=""
-        style="border: 1px solid black"
-      />
     </div>
   </section>
 </template>

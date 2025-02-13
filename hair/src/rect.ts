@@ -7,6 +7,15 @@ interface Rect {
   height: number;
 }
 class Rect {
+  constructor(top: number = 0, left: number = 0, right: number = 0, bottom: number = 0) {
+    this.top = top;
+    this.left = left;
+    this.right = right;
+    this.bottom = bottom;
+    this.width = right - left;
+    this.height = bottom - top;
+  }
+
   static union(rects: Rect[]) {
     const union: Rect = rects.reduce(
       (acc, rect) => {

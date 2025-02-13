@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 // import sample from '@/assets/測試用圖_改色.jpg';
 import sample from '@/assets/730f4b50ac85c7f8ba37e5b7847caf8d_0.jpg';
 import shadowMobileTopLeft from '@/assets/shadow_tl_1.png';
-import shadow2TopLeft from '@/assets/shadow_tl_2.png';
+import shadowTopLeft from '@/assets/shadow_tl_2.png';
 import shadowTop from '@/assets/shadow_t.png';
 import shadowTopRight from '@/assets/shadow_tr.png';
 import shadowLeft from '@/assets/shadow_l.png';
@@ -18,6 +18,38 @@ import { useRwd } from './composables/rwd';
 const canvasRef = ref<HTMLCanvasElement>();
 const { isMobile } = useRwd();
 
+class GridRenderer {
+  constructor(topLeftSrc: string, topSrc: string, topRightSrc: string, leftSrc: string, rightSrc: string, bottomLeftSrc: string, bottomSrc: string, bottomRightSrc: string) {
+    this.topLeftSrc = topLeftSrc;
+    this.topSrc = topSrc;
+    this.topRightSrc = topRightSrc;
+    this.leftSrc = leftSrc;
+    this.rightSrc = rightSrc;
+    this.bottomLeftSrc = bottomLeftSrc;
+    this.bottomSrc = bottomSrc;
+    this.bottomRightSrc = bottomRightSrc;
+  }
+
+  async render() {
+
+  }
+}
+
+class FrameRenderer {
+  ctx: CanvasRenderingContext2D;
+  constructor(ctx: CanvasRenderingContext2D) {
+    this.ctx = ctx;
+  }
+
+  renderShadow() {
+
+  }
+
+  renderMask() {
+
+  }
+}
+
 onMounted(async () => {
   const canvas = canvasRef.value!;
   canvas.width = canvas.clientWidth;
@@ -25,7 +57,6 @@ onMounted(async () => {
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  drawBackground();
   const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve) => {
     const img = new Image();
     img.src = src;
@@ -34,34 +65,22 @@ onMounted(async () => {
     }
   })
 
-  const topLeftWidth = 25;
-  const topLeftHeight = 65;
-  const topHeight = 27;
-  const topRightWidth = 81;
-  const topRightHeight = 65;
-  const leftWidth = 25;
-  const rightWidth = 27;
-  const bottomLeftWidth = 25;
-  const bottomLeftHeight = 23;
-  const bottomHeight = 23;
-  const bottomRightWidth = 80;
-  const bottomRightHeight = 23;
+  drawBackground(ctx);
+  await drawPicture(ctx, sample);
+  await drawShadow(ctx);
+  await drawMask(ctx);
 
-  await drawPicture();
-  await drawShadow();
-  await drawMask();
-
-  function drawBackground() {
+  function drawBackground(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = '#cbcbcb';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  async function drawPicture() {
-    const image = await loadImage(sample);
+  async function drawPicture(ctx: CanvasRenderingContext2D, src: string) {
+    const image = await loadImage(src);
     const imageWidth = image.width;
     const imageHeight = image.height;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
+    const canvasWidth = ctx.canvas.width;
+    const canvasHeight = ctx.canvas.height;
     const imageRatio = imageWidth / imageHeight;
     const canvasRatio = canvasWidth / canvasHeight;
     let width = canvasWidth;
@@ -93,21 +112,32 @@ onMounted(async () => {
     ctx.drawImage(image, x, y, width, height);
   }
 
-  async function drawShadow() {
-    ctx.drawImage(await loadImage(shadowMobileTopLeft), 0, 0, topLeftWidth, topLeftHeight);
-    ctx.drawImage(await loadImage(shadowTop), topLeftWidth, 0, canvas.width - topLeftWidth - topRightWidth, topHeight);
-    ctx.drawImage(await loadImage(shadowTopRight), canvas.width - topRightWidth, 0, topRightWidth, topRightHeight);
-    ctx.drawImage(await loadImage(shadowLeft), 0, topLeftHeight, leftWidth, canvas.height - topLeftHeight - bottomLeftHeight);
-    ctx.drawImage(await loadImage(shadowRight), canvas.width - rightWidth, topRightHeight, rightWidth, canvas.height - topRightHeight - bottomRightHeight);
-    ctx.drawImage(await loadImage(shadowBottomLeft), 0, canvas.height - bottomLeftHeight, bottomLeftWidth, bottomLeftHeight);
-    ctx.drawImage(await loadImage(shadowBottom), bottomLeftWidth, canvas.height - bottomHeight, canvas.width - bottomLeftWidth - bottomRightWidth, bottomHeight);
-    ctx.drawImage(await loadImage(shadowBottomRight), canvas.width - bottomRightWidth, canvas.height - bottomRightHeight, bottomRightWidth, bottomRightHeight);
+  async function drawShadow(ctx: CanvasRenderingContext2D) {
+    const topLeftImage = await loadImage(isMobile.value ? shadowMobileTopLeft : shadowTopLeft)
+    const topImage = await loadImage(shadowTop)
+    const topRightImage = await loadImage(shadowTopRight)
+    const leftImage = await loadImage(shadowLeft)
+    const rightImage = await loadImage(shadowRight)
+    const bottomLeftImage = await loadImage(shadowBottomLeft)
+    const bottomImage = await loadImage(shadowBottom)
+    const bottomRightImage = await loadImage(shadowBottomRight)
+
+    ctx.drawImage(topLeftImage, 0, 0, topLeftImage.width, topLeftImage.height);
+    ctx.drawImage(topImage, topLeftImage.width, 0, ctx.canvas.width - topLeftImage.width - topRightImage.width, topImage.height);
+    ctx.drawImage(topRightImage, ctx.canvas.width - topRightImage.width, 0, topRightImage.width, topRightImage.height);
+    ctx.drawImage(leftImage, 0, topLeftImage.height, leftImage.width, ctx.canvas.height - topLeftImage.height - bottomLeftImage.height);
+    ctx.drawImage(rightImage, ctx.canvas.width - rightImage.width, topRightImage.height, rightImage.width, ctx.canvas.height - topRightImage.height - bottomRightImage.height);
+    ctx.drawImage(bottomLeftImage, 0, ctx.canvas.height - bottomLeftImage.height, bottomLeftImage.width, bottomLeftImage.height);
+    ctx.drawImage(bottomImage, bottomLeftImage.width, ctx.canvas.height - bottomImage.height, ctx.canvas.width - bottomLeftImage.width - bottomRightImage.width, bottomImage.height);
+    ctx.drawImage(bottomRightImage, ctx.canvas.width - bottomRightImage.width, ctx.canvas.height - bottomRightImage.height, bottomRightImage.width, bottomRightImage.height);
   }
 
-  async function drawMask() {
+  async function drawMask(ctx: CanvasRenderingContext2D) {
     ctx.globalCompositeOperation = 'destination-out';
-    // ctx.drawImage(await loadImage(maskTopLeft), 0, 0, topLeftWidth, topLeftHeight);
-    ctx.drawImage(await loadImage(maskTopRight), canvas.width - topRightWidth, 0, topRightWidth, topRightHeight);
+    const topLeftImage = await loadImage(maskTopLeft)
+    ctx.drawImage(topLeftImage, 0, 0);
+    const topRightImage = await loadImage(maskTopRight)
+    ctx.drawImage(topRightImage, ctx.canvas.width - topRightImage.width, 0);
     ctx.globalCompositeOperation = 'source-over';
   }
 })
