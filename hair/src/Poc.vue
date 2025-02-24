@@ -139,7 +139,7 @@ onMounted(async () => {
   </section>
 </template>
 
-<style>
+<style scoped>
 canvas {
   clear: both;
   display: block;

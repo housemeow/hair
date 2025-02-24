@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-// import sample from '@/assets/測試用圖_改色.jpg';
+import { onMounted, onUnmounted, ref } from 'vue';
 import sample from '@/assets/730f4b50ac85c7f8ba37e5b7847caf8d_0.jpg';
 import shadowMobileTopLeft from '@/assets/shadow_tl_1.png';
 import shadowTopLeft from '@/assets/shadow_tl_2.png';
@@ -13,14 +12,31 @@ import shadowBottom from '@/assets/shadow_b.png';
 import shadowBottomRight from '@/assets/shadow_br.png';
 import maskTopLeft from '@/assets/mask_tl.png';
 import maskTopRight from '@/assets/mask_tr.png';
-import { useRwd } from './composables/rwd';
-
+import { useRwd } from '@/composables/rwd';
 const pictureCanvasRef = ref<HTMLCanvasElement>();
 const hairCanvasRef = ref<HTMLCanvasElement>();
 const shadowCanvasRef = ref<HTMLCanvasElement>();
 const { isMobile } = useRwd();
 
-onMounted(async () => {
+const emit = defineEmits(['back'])
+const timer = ref<number | null>(null)
+
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    if (timer.value) {
+      clearTimeout(timer.value)
+    }
+    timer.value = setTimeout(() => {
+      render()
+    }, 100)
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', render)
+})
+
+const render = async () => {
   const pictureCanvas = pictureCanvasRef.value!;
   const hairCanvas = hairCanvasRef.value!;
   const shadowCanvas = shadowCanvasRef.value!;
@@ -125,43 +141,42 @@ onMounted(async () => {
     ctx.drawImage(topRightImage, ctx.canvas.width - topRightImage.width, 0);
     ctx.globalCompositeOperation = 'source-over';
   }
-})
-/**
- * Layer
- * 1. background
- * 2. canvas
- * 2.1. image
- * 2.2. crop mask
- * 3. shadow
- */
+}
+
+onMounted(render)
+
+const handleBack = () => {
+  emit('back')
+}
 </script>
 
 <template>
-  <div class="picture">
-    <canvas ref="pictureCanvasRef">BG Color / Picture in Contain / Mask</canvas>
-    <canvas ref="hairCanvasRef">Hair / Mask (CSS: blur & blend-model: multiply)</canvas>
-    <canvas ref="shadowCanvasRef">Shadow Mask</canvas>
+  <div class="picture-frame">
+    <canvas ref="pictureCanvasRef"></canvas>
+    <canvas ref="hairCanvasRef"></canvas>
+    <canvas ref="shadowCanvasRef"></canvas>
+    <img src="@/assets/photo-edit-button.svg" alt="" @click="handleBack">
   </div>
 </template>
 
 <style scoped lang="scss">
-.picture {
+.picture-frame {
   width: 100%;
-  height: 475px;
   position: relative;
 
   canvas {
-    width: 100%;
-    height: 100%;
     position: absolute;
     left: 0;
     top: 0;
+    width: 100%;
+    height: 100%;
   }
-}
 
-@media screen and (min-width: 600px) {
-  .picture {
-    max-width: 375px;
+  img {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 27px;
   }
 }
 </style>
