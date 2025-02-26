@@ -27,14 +27,12 @@ const error = ref(false);
 <style scoped lang="scss">
 .prepare-view {
   flex: 1;
-  height: 100vh;
   display: flex;
   padding-top: 144px;
   padding-bottom: 124px;
   flex-direction: column;
   align-items: center;
   position: relative;
-
 
   img {
     width: 140px;
@@ -75,8 +73,36 @@ const error = ref(false);
 }
 
 @media screen and (min-width: 600px) {
-  img {
-    width: 160px;
+  .prepare-view {
+    padding-top: 215px;
+    padding-bottom: 220px;
+
+    img {
+      width: 160px;
+    }
+
+    h1 {
+      margin-top: 68px;
+      font-size: 17px;
+      font-weight: 500;
+      line-height: 1.47;
+    }
+
+    p {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+  }
+}
+
+@media screen and (min-width: 992px) {
+  .prepare-view {
+    padding-top: 238px;
+    padding-bottom: 200px;
+
+    h1 {
+      margin-top: 60px;
+    }
   }
 }
 </style>

@@ -4,7 +4,7 @@ import MainView from '@/components/MainView/MainView.vue';
 import { ref } from 'vue';
 
 type ViewState = 'prepare' | 'main';
-const state = ref<ViewState>('prepare');
+const state = ref<ViewState>('main');
 
 const handleBack = () => {
   state.value = 'prepare';
@@ -50,7 +50,6 @@ const handleBack = () => {
     letter-spacing: normal;
     text-align: center;
     color: #707070;
-
   }
 }
 
@@ -65,6 +64,18 @@ const handleBack = () => {
 @media (-webkit-min-device-pixel-ratio: 3), (min-resolution: 288dpi) {
   .background {
     background-image: url("@/assets/background@3x.webp");
+  }
+}
+
+@media screen and (min-width: 601px) {
+  .background {
+    .main {
+    }
+
+    footer {
+      margin-bottom: 51px;
+      height: auto;
+    }
   }
 }
 </style>

@@ -2,15 +2,16 @@
 import { onUnmounted, ref } from 'vue';
 import ProductDialog from '@/components/MainView/ProductDialog.vue';
 import PictureFrame from '@/components/MainView/PictureFrame.vue';
+import HairImage from '@/components/HairImage.vue';
 
 const doubleProduct = ref();
 const categories = ref(['11號', '12號', '粉色系', '紫色系', '灰色系', '藍色系'])
-const hairs = ref(['hair1', 'hair2', 'hair3', 'hair4', 'hair5', 'hair6', 'hair7', 'hair8', 'hair9', 'hair10', 'hair11', 'hair12', 'hair13', 'hair14', 'hair15', 'hair16', 'hair17', 'hair18', 'hair19', 'hair20'])
+const colors = ref(['hair1', 'hair2', 'hair3', 'hair4', 'hair5', 'hair6', 'hair7', 'hair8', 'hair9', 'hair10', 'hair11', 'hair12', 'hair13', 'hair14', 'hair15', 'hair16', 'hair17', 'hair18', 'hair19', 'hair20'])
 const selectedCategory = ref(0)
-const selectedHair = ref(0)
-const selectedHairValue = ref(0)
+const selectedHairColor = ref(0)
+const selectedHairColorValue = ref(0)
 const products = ['long11.png', 'long12.png', 'short21.png', 'short22.png', 'short23.png', 'short24.png']
-const productDialog = ref(false)
+const productDialog = ref(true)
 const infoVisible = ref(false)
 const infoRef = ref<HTMLSpanElement>()
 
@@ -44,61 +45,58 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const handleCategoryScroll = (e: Event) => {
-  const target = e.target as HTMLElement
-  const category = target as HTMLUListElement
-  const scrollLeft = category.scrollLeft
-  const MARGIN_LEFT = category.clientWidth * 0.5
-  const childCount = category.children.length
+const handleScroll = (list: HTMLUListElement, setIndex: (i: number, ratio: number) => void) => {
+  const listBoundingClientRect = list.getBoundingClientRect()
+  const scrollLeft = list.scrollLeft
+  const MARGIN_LEFT = list.clientWidth * 0.5
+  const childCount = list.children.length
 
   for (let i = 0; i < childCount; i++) {
-    const child = category.children[i] as HTMLElement
+    const child = list.children[i] as HTMLElement
     const childWidth = child.clientWidth
-    if (scrollLeft - childWidth <= child.offsetLeft - MARGIN_LEFT && child.offsetLeft - MARGIN_LEFT <= scrollLeft + childWidth) {
-      selectedCategory.value = i
+    const childOffsetInScroller = child.offsetLeft - listBoundingClientRect.left
+
+    if (scrollLeft - childWidth <= childOffsetInScroller - MARGIN_LEFT && childOffsetInScroller - MARGIN_LEFT <= scrollLeft + childWidth) {
+      const start = (scrollLeft - childWidth / 2)
+      const move = childOffsetInScroller - MARGIN_LEFT
+      const diff = move - start
+      const ratio = i - diff / childWidth
+      setIndex(i, ratio)
       break
     }
   }
 }
 
-const handleHairScroll = (e: Event) => {
-  const target = e.target as HTMLElement
-  const hair = target as HTMLUListElement
-  const scrollLeft = hair.scrollLeft
-  const MARGIN_LEFT = hair.clientWidth * 0.5
-  const childCount = hair.children.length
+const handleCategoryScroll = (e: Event) => {
+  handleScroll(e.target as HTMLUListElement, (i) => {
+    selectedCategory.value = i
+  })
+}
 
-  for (let i = 0; i < childCount; i++) {
-    const child = hair.children[i] as HTMLElement
-    const childWidth = child.clientWidth
-    if (scrollLeft - childWidth <= child.offsetLeft - MARGIN_LEFT && child.offsetLeft - MARGIN_LEFT <= scrollLeft) {
-      selectedHair.value = i
-      const start = (scrollLeft - childWidth / 2)
-      const move = child.offsetLeft - MARGIN_LEFT
-      const ratio = move - start
-      selectedHairValue.value = i - ratio / childWidth
-      break
-    }
-  }
+const handleHairColorScroll = (e: Event) => {
+  handleScroll(e.target as HTMLUListElement, (i, ratio) => {
+    selectedHairColor.value = i
+    selectedHairColorValue.value = ratio
+  })
 }
 const getCategoryClass = (category: string) => {
   return categories.value.findIndex(value => value === category) === selectedCategory.value ? 'active' : ''
 }
 
-const getHairClass = (hair: string) => {
-  const index = hairs.value.findIndex(value => value === hair)
-  if (index === selectedHair.value) {
+const getHairColorClass = (color: string) => {
+  const index = colors.value.findIndex(value => value === color)
+  if (index === selectedHairColor.value) {
     return 'active'
-  } else if (index === selectedHair.value - 1 || index === selectedHair.value + 1) {
+  } else if (index === selectedHairColor.value - 1 || index === selectedHairColor.value + 1) {
     return 'middle'
   }
   return ''
 }
 
-const getHairLiStyle = (hair: string) => {
-  const index = hairs.value.findIndex(value => value === hair)
+const getHairColorStyle = (color: string) => {
+  const index = colors.value.findIndex(value => value === color)
   let ratio = 0;
-  ratio = Math.abs((index - selectedHairValue.value)) / 2
+  ratio = Math.abs((index - selectedHairColorValue.value)) / 2
   ratio = Math.min(1, Math.max(0, ratio))
 
   return {
@@ -114,7 +112,9 @@ const scrollToItem = (e: MouseEvent) => {
   const target = e.currentTarget as HTMLElement as HTMLLIElement
   const list = target.parentElement as HTMLUListElement
   const MARGIN_LEFT = list.clientWidth * 0.5
-  const scrollLeft = target.offsetLeft + target.clientWidth / 2 - MARGIN_LEFT
+  const listBoundingClientRect = list.getBoundingClientRect()
+  const itemOffsetInScroller = (target.offsetLeft - listBoundingClientRect.left - MARGIN_LEFT)
+  const scrollLeft = target.clientWidth / 2 + itemOffsetInScroller
 
   list.scrollTo({ left: scrollLeft, behavior: 'smooth' })
 }
@@ -130,21 +130,23 @@ const scrollToItem = (e: MouseEvent) => {
     </header>
     <label class="fixed top-[1em] left-[1em] z-50" for="doubleProduct"><input id="doubleProduct" type="checkbox" v-model="doubleProduct">Double Product</label>
     <PictureFrame />
-    <button @click="showProduct"><img src="@/assets/book-icon.svg" alt="">產品使用說明</button>
-    <figure>
-      <img src="@/assets/products/product-2-shadow.webp"
-        srcset="@/assets/products/product-2-shadow@2x.webp 2x,
-                @/assets/products/product-2-shadow@3x.webp 3x"
-        class="long-product-shadow">
-      <img class="long-product" src="@/assets/products/long11.png" alt="">
-      <template v-if="doubleProduct">
-        <img src="@/assets/products/product-1-shadow.webp"
-          srcset="@/assets/products/product-1-shadow@2x.webp 2x,
-                  @/assets/products/product-1-shadow@3x.webp 3x"
-          class="short-product-shadow">
-        <img class="short-product" src="@/assets/products/short21.png" alt="">
-      </template>
-    </figure>
+    <button @click="showProduct"><img src="@/assets/book-icon.svg" alt="">
+      產品使用說明
+      <figure>
+        <img src="@/assets/products/product-2-shadow.webp"
+          srcset="@/assets/products/product-2-shadow@2x.webp 2x,
+                  @/assets/products/product-2-shadow@3x.webp 3x"
+          class="long-product-shadow">
+        <img class="long-product" src="@/assets/products/long11.png" alt="">
+        <template v-if="doubleProduct">
+          <img src="@/assets/products/product-1-shadow.webp"
+            srcset="@/assets/products/product-1-shadow@2x.webp 2x,
+                    @/assets/products/product-1-shadow@3x.webp 3x"
+            class="short-product-shadow">
+          <img class="short-product" src="@/assets/products/short21.png" alt="">
+        </template>
+      </figure>
+    </button>
 
     <h1>點選心儀的髮色清單</h1>
     <p>
@@ -158,11 +160,15 @@ const scrollToItem = (e: MouseEvent) => {
     <ul class="category" @scroll="handleCategoryScroll">
       <li v-for="category in categories" :class="getCategoryClass(category)" @click="scrollToItem($event)">{{ category }}</li>
     </ul>
-    <ul class="hair" @scroll="handleHairScroll">
-      <li v-for="hair in hairs" :class="getHairClass(hair)" :style="getHairLiStyle(hair)" @click="scrollToItem($event)">
-        <img src="@/assets/hair_sample.png" alt="">
-      </li>
-    </ul>
+    <div class="hair">
+      <img src="@/assets/left-arrow-button.svg" alt="">
+      <ul @scroll="handleHairColorScroll">
+        <li v-for="color in colors" :class="getHairColorClass(color)" :style="getHairColorStyle(color)" @click="scrollToItem($event)">
+          <HairImage :color="color"/>
+        </li>
+      </ul>
+      <img src="@/assets/left-arrow-button.svg" alt="">
+    </div>
     <ProductDialog v-if="productDialog" @close="handleClose" :double-product="doubleProduct" />
   </div>
 </template>
@@ -174,10 +180,10 @@ const scrollToItem = (e: MouseEvent) => {
   flex: 1;
 
   header {
+    margin-top: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 80px;
 
     img {
       width: 120px;
@@ -186,6 +192,7 @@ const scrollToItem = (e: MouseEvent) => {
   }
 
   .picture-frame {
+    margin-top: 17px;
     flex: 1;
   }
 
@@ -213,48 +220,47 @@ const scrollToItem = (e: MouseEvent) => {
     border-style: solid;
     border-radius: 25px;
     box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.16);
+    position: relative;
 
-    img {
+    > img {
       width: 15px;
       margin-right: 8px;
     }
-  }
 
-  figure {
-    position: relative;
-    z-index: 1;
-    width: 1px;
-    height: 1px;
-    background: black;
-    align-self: flex-end;
-
-    .long-product, .short-product, .long-product-shadow, .short-product-shadow {
-      max-width: none;
+    figure {
       position: absolute;
-    }
+      right: 0;
+      bottom: 0;
+      background: black;
 
-    .long-product-shadow {
-      width: 76px;
-      right: 2px;
-      bottom: -38px;
-    }
+      .long-product, .short-product, .long-product-shadow, .short-product-shadow {
+        max-width: none;
+        position: absolute;
+      }
 
-    .long-product {
-      right: 11px;
-      bottom: -24px;
-      width: 57px;
-    }
+      .long-product-shadow {
+        width: 76px;
+        right: 3px;
+        bottom: -35px;
+      }
 
-    .short-product-shadow {
-      bottom: -38px;
-      right: 50px;
-      width: 60px;
-    }
+      .long-product {
+        width: 57px;
+        right: 11px;
+        bottom: -22px;
+      }
 
-    .short-product {
-      right: 52px;
-      bottom: -30px;
-      width: 57px;
+      .short-product-shadow {
+        width: 60px;
+        right: 51px;
+        bottom: -39px;
+      }
+
+      .short-product {
+        width: 57px;
+        right: 52px;
+        bottom: -30px;
+      }
     }
   }
 
@@ -362,6 +368,7 @@ const scrollToItem = (e: MouseEvent) => {
       letter-spacing: normal;
       text-align: center;
       color: #707070;
+      cursor: pointer;
 
       &.active {
         background-color: #707070;
@@ -376,58 +383,213 @@ const scrollToItem = (e: MouseEvent) => {
 
   .hair {
     margin-top: 8px;
-    height: 85px;
-    display: flex;
-    overflow: auto;
     flex-shrink: 0;
-    scroll-snap-type: x mandatory;
+    display: flex;
 
-    &:before, &:after {
-      content: '';
-      flex: 0 0 50%;
+    > img {
+      display: none;
     }
 
-    li {
-      --padding-top: 10px;
-      --img-width: 40px;
-      --img-height: 40px;
-      --shadow-color: rgba(0, 0, 0, 0.1);
-      --shadow-percent: 62%;
-
-      flex: 0 0 20%;
-      position: relative;
-      scroll-snap-align: center;
+    ul {
+      flex: 1;
+      height: 85px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: var(--padding-top);
-      transition: 0.1s;
+      overflow: auto;
+      scroll-snap-type: x mandatory;
 
-      img {
-        border: 2px solid transparent;
-        padding: 2px;
-        border-radius: 50%;
-        transition: 0.1s;
-        width: var(--img-width);
-        height: var(--img-height);
-      }
-
-      &::after {
+      &:before, &:after {
         content: '';
-        display: block;
-        width: 40px;
-        height: 30px;
-        margin: 5px 0 0;
-        background-image: radial-gradient(ellipse at 50% 50%, var(--shadow-color), rgba(0, 0, 0, 0) var(--shadow-percent));
-        transition: 0.1s;
+        flex: 0 0 50%;
       }
 
-      &.active {
-        img {
-          border-color: #707070;
+      li {
+        --padding-top: 10px;
+        --img-width: 40px;
+        --img-height: 40px;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --shadow-percent: 62%;
+
+        flex: 0 0 20%;
+        position: relative;
+        scroll-snap-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: var(--padding-top);
+        transition: 0.1s;
+        cursor: pointer;
+
+        .hair-image {
+          border: 2px solid transparent;
+          padding: 2px;
+          border-radius: 50%;
+          transition: 0.1s;
+          width: var(--img-width);
+          height: var(--img-height);
+        }
+
+        &::after {
+          content: '';
+          display: block;
+          width: 40px;
+          height: 30px;
+          margin: 5px 0 0;
+          background-image: radial-gradient(ellipse at 50% 50%, var(--shadow-color), rgba(0, 0, 0, 0) var(--shadow-percent));
+          transition: 0.1s;
+        }
+
+        &.active {
+          img {
+            border-color: #707070;
+          }
         }
       }
+    }
+  }
+}
+
+@media screen and (min-width: 601px) {
+  .main-view {
+    align-items: center;
+
+    header {
+      margin-top: 34px;
+
+      img {
+        width: 152px;
+        margin-left: 33px;
+      }
+    }
+
+    .picture-frame {
+      margin-top: 56px;
+      width: 375px;
+      max-height: 500px;
+    }
+
+    button {
+      width: 375px;
+
+      figure {
+        .long-product-shadow {
+          width: 99px;
+          right: -67px;
+          bottom: -41px;
+        }
+
+        .long-product {
+          width: 73px;
+          right: -57px;
+          bottom: -24px;
+        }
+
+        .short-product-shadow {
+          width: 78px;
+          right: -4px;
+          bottom: -47px;
+        }
+
+        .short-product {
+          width: 74px;
+          right: -3px;
+          bottom: -34px;
+        }
+      }
+    }
+
+    h1 {
+      margin-top: 46px;
+    }
+
+    .category {
+      margin-top: 69px;
+      margin-left: 0;
+      margin-right: 0;
+      width: 544px;
+    }
+
+    .hair {
+      width: 556px;
+      margin-bottom: 37px;
+
+      > img {
+        align-self: flex-start;
+        margin-top: 18px;
+        display: block;
+        width: 12px;
+        cursor: pointer;
+
+        &:first-child {
+          margin-right: 10px;
+        }
+
+        &:last-child {
+          margin-left: 10px;
+          transform: rotate(180deg);
+        }
+      }
+
+      ul {
+        li {
+          --padding-top: 10px;
+          --img-width: 40px;
+          --img-height: 40px;
+          --shadow-color: rgba(0, 0, 0, 0.1);
+          --shadow-percent: 62%;
+          flex: 0 0 calc(100% / 7);
+        }
+      }
+    }
+  }
+}
+
+@media screen and (min-width: 992px) {
+  .main-view {
+    header {
+      img {
+        width: 230px;
+      }
+    }
+
+    .picture-frame {
+      margin-top: 38px;
+    }
+
+    button {
+      figure {
+        .long-product-shadow {
+          width: 99px;
+          right: -54px;
+          bottom: -38px;
+        }
+
+        .long-product {
+          width: 73px;
+          right: -54px;
+          bottom: -38px;
+        }
+
+        .short-product-shadow {
+          width: 78px;
+          right: -9px;
+          bottom: -44px;
+        }
+
+        .short-product {
+          width: 74px;
+          right: 10px;
+          bottom: -31px;
+        }
+      }
+    }
+
+    h1 {
+      margin-top: 64px;
+    }
+
+    .category {
+      margin-top: 34px;
     }
   }
 }

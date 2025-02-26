@@ -3,11 +3,11 @@
 
 <template>
   <div class="error-dialog">
-    <div>
+    <dialog>
       <img src="@/assets/error-icon.svg" alt="">
       <p>!! 無法辨識你所選擇的圖片 !!</p>
       <button>請用重新選擇其他張圖片, 謝謝。</button>
-    </div>
+    </dialog>
   </div>
 </template>
 
@@ -18,14 +18,14 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #919191;
 
-  div {
+  dialog {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    background-color: #919191;
 
     img {
       margin-top: 157px;
@@ -63,6 +63,43 @@
       text-align: center;
       color: #919191;
       cursor: pointer;
+    }
+  }
+}
+
+@media screen and (min-width: 601px) {
+  .error-dialog {
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff 34%, #fff 65%, rgba(255, 255, 255, 0));
+    display: flex;
+    justify-content: center;
+
+    dialog {
+      margin-top: 207px;
+      padding-bottom: 50px;
+      width: 375px;
+      height: 411px;
+      border-radius: 22px;
+
+      img {
+        margin-top: 105px;
+      }
+
+      p {
+        margin-top: 31px;
+
+      }
+
+      button {
+        margin-top: auto;
+      }
+    }
+  }
+}
+
+@media screen and (min-width: 992px) {
+  .error-dialog {
+    dialog {
+      margin-top: 237px;
     }
   }
 }
