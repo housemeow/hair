@@ -1,0 +1,3 @@
+@import "@/reset.css" layer(reset);
+@import "tailwindcss";
+@import "@/font.css";

@@ -125,21 +125,15 @@ limitations under the License. -->
       <p><b>Click on an image below</b> to see its Segmentation.</p>
       <div class="segmentOnClick">
         <canvas class="removed"></canvas>
-        <img
-          src="https://assets.codepen.io/9177687/dog_flickr_publicdomain.jpeg"
-          crossorigin="anonymous"
-          title="Click to get segmentation!"
-        />
+        <!-- src="https://assets.codepen.io/9177687/dog_flickr_publicdomain.jpeg" -->
+        <img src="./assets//測試用圖_改色.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
         <p class="classification removed"></p>
       </div>
 
       <div class="segmentOnClick">
         <canvas class="removed"></canvas>
-        <img
-          src="https://assets.codepen.io/9177687/cat_flickr_publicdomain.jpeg"
-          crossorigin="anonymous"
-          title="Click to get segmentation!"
-        />
+        <!-- src="https://assets.codepen.io/9177687/cat_flickr_publicdomain.jpeg" -->
+        <img src="./assets//測試用圖_改色.jpg" crossorigin="anonymous" title="Click to get segmentation!" />
         <p class="classification removed"></p>
       </div>
 
@@ -214,7 +208,8 @@ limitations under the License. -->
         imageSegmenter = await ImageSegmenter.createFromOptions(audio, {
           baseOptions: {
             modelAssetPath:
-              "https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/1/deeplab_v3.tflite",
+              "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite",
+            // "https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/1/deeplab_v3.tflite",
             delegate: "GPU",
           },
           runningMode: runningMode,

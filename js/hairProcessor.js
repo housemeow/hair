@@ -3,7 +3,7 @@ import {
   ObjectDetector,
   FilesetResolver,
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2";
-
+import CanvasRenderer from "./canvasRenderer.js";
 import Rect from "./rect.js";
 
 const CATEGORY_HAIR = 1;
@@ -32,19 +32,14 @@ class HairProcessor {
     this.isCrop = false;
     this.setColor(hairColor);
     this.setRenderMode(renderMode || "category");
+    this.canvasRenderer = new CanvasRenderer(canvas);
     this.setImg(img);
     this.setOriginalImg(originalImg);
-    this.setCanvas(canvas);
     this.setBlur(blur || 0);
     this.imageSegmenter = null;
     this.objectDetector = null;
     this.labels = null;
     this.runningMode = "IMAGE";
-  }
-
-  setCanvas(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
   }
 
   setBlur(blur) {
@@ -57,12 +52,13 @@ class HairProcessor {
     this.height = img.naturalHeight;
 
     return new Promise((resolve) => {
-      this.img.setAttribute("src", img.getAttribute("src"));
-      console.log({ width: this.width, height: this.height });
       this.img.onload = () => {
         this.segment = null;
+        this.canvasRenderer.setSize(this.width, this.height);
         resolve();
       };
+      this.canvasRenderer.clear();
+      this.img.setAttribute("src", img.getAttribute("src"));
     });
   }
 
@@ -122,37 +118,19 @@ class HairProcessor {
     });
   }
 
-  _clearCanvas() {
-    this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
-  _renderToCanvas(imageData, width, height) {
-    const uint8Array = new Uint8ClampedArray(imageData.buffer);
-    const newImageData = new ImageData(uint8Array, width, height);
-    // this.ctx.shadowBlur = 10;
-    // 在畫布上應用模糊
-    // this.ctx.filter = "blur(50px)"; // 設定模糊程度
-
+  _renderToCanvas(imageData) {
     // 創建暫存 Canvas
     const tempCanvas = document.createElement("canvas");
     const tempCtx = tempCanvas.getContext("2d");
-
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-
+    tempCanvas.width = this.width;
+    tempCanvas.height = this.height;
     // 把圖像畫到暫存 Canvas
-    tempCtx.putImageData(newImageData, 0, 0);
+    tempCtx.putImageData(imageData, 0, 0);
 
     // 將模糊後的影像畫回主 Canvas
-    this.ctx.filter = `blur(${this.blur}px)`; // 設定模糊程度
-    this.ctx.drawImage(tempCanvas, 0, 0);
-    this.ctx.filter = "none"; // 清除 filter 避免影響後續繪圖
+    this.canvasRenderer.renderBlurImage(tempCanvas, this.blur);
 
     tempCanvas.remove();
-
-    // this.ctx.putImageData(newImageData, 0, 0);
-    // this.ctx.filter = "none"; // 重置模糊
   }
 
   _createRegion(crop) {
@@ -199,10 +177,10 @@ class HairProcessor {
     const mask = this.segment.categoryMask.getAsUint8Array();
     for (let i = 0; i < mask.length; i++) {
       if (mask[i] === 0) continue;
-      imageData[i * 4] = this.hairColor[0];
-      imageData[i * 4 + 1] = this.hairColor[1];
-      imageData[i * 4 + 2] = this.hairColor[2];
-      imageData[i * 4 + 3] = this.hairColor[3];
+      imageData.data[i * 4] = this.hairColor[0];
+      imageData.data[i * 4 + 1] = this.hairColor[1];
+      imageData.data[i * 4 + 2] = this.hairColor[2];
+      imageData.data[i * 4 + 3] = this.hairColor[3];
     }
   }
 
@@ -227,39 +205,27 @@ class HairProcessor {
         this.confidenceThreshold1,
         this.confidenceThreshold2
       );
-      imageData[i * 4] = this.hairColor[0];
-      imageData[i * 4 + 1] = this.hairColor[1];
-      imageData[i * 4 + 2] = this.hairColor[2];
-      imageData[i * 4 + 3] = this.hairColor[3] * ratio;
+      imageData.data[i * 4] = this.hairColor[0];
+      imageData.data[i * 4 + 1] = this.hairColor[1];
+      imageData.data[i * 4 + 2] = this.hairColor[2];
+      imageData.data[i * 4 + 3] = this.hairColor[3] * ratio;
     }
   }
 
   async crop() {
-    this._clearCanvas();
-    this.canvas.width = this.unionRect.width;
-    this.canvas.height = this.unionRect.height;
-    this.ctx.drawImage(
-      this.originalImg, // 原圖
-      this.unionRect.left,
-      this.unionRect.top,
-      this.unionRect.width,
-      this.unionRect.height, // 裁切區域
-      0,
-      0,
-      this.unionRect.width,
-      this.unionRect.height // 畫布區域
-    );
-    const croppedImage = this.canvas.toDataURL("image/png");
+    this.canvasRenderer.clear();
+    this.canvasRenderer.setSize(this.unionRect.width, this.unionRect.height);
+    this.canvasRenderer.drawImage(this.originalImg, this.unionRect);
+    const croppedImage = this.canvasRenderer.getImage();
     await this.setImgSrc(croppedImage);
-    this._clearCanvas();
+    this.canvasRenderer.clear();
   }
 
   async _createMask(crop) {
     if (crop) {
       await this._createSegment(crop);
       await this.crop();
-      this.canvas.width = this.unionRect.width;
-      this.canvas.height = this.unionRect.height;
+      this.canvasRenderer.setSize(this.unionRect.width, this.unionRect.height);
       await this._createSegment(crop);
     } else if (!this.segment) {
       await this._createSegment(crop);
@@ -267,14 +233,10 @@ class HairProcessor {
   }
 
   async render(crop) {
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
-    this._clearCanvas();
-
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     await this._createMask(crop);
-
-    const { width, height } = this.segment.categoryMask;
-    const imageData = this.ctx.getImageData(0, 0, width, height).data;
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const imageData = this.canvasRenderer.getImageData();
 
     if (this.renderMode === "category") {
       this._renderHairCategory(imageData);
@@ -282,7 +244,9 @@ class HairProcessor {
       this._renderHairConfidence(imageData);
     }
 
-    this._renderToCanvas(imageData, width, height);
+    this.canvasRenderer.clear();
+    this._renderToCanvas(imageData);
+    await new Promise((resolve) => setTimeout(resolve, 3000));
   }
 }
 
