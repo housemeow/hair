@@ -2,38 +2,32 @@
 import { ref } from 'vue';
 import MobilePictureSelectDialog from '@/components/PrepareView/MobilePictureSelectDialog.vue';
 import { useRwd } from '@/composables/rwd';
+import { useMainStore } from '@/stores';
 
-const emit = defineEmits();
+const emit = defineEmits({
+  change: (event: Event) => true,
+});
 
-const isMobileDialogShow = ref(false);
+const store = useMainStore()
+
+const fileRef = ref<HTMLInputElement>();
+
 const rwd = useRwd();
-const handleFileChange = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (file) {
-    console.log(file);
-  } else {
-    console.log('no file');
-  }
-  target.value = '';
-  emit('change', file);
-}
 
-const handleSelectFile = (file: File) => {
-  emit('change', file);
+const handleFileChange = (e: Event) => {
+  emit('change', e)
 }
 
 const handleClick = () => {
-  if (rwd.isMobile || rwd.isTablet) {
-    isMobileDialogShow.value = true;
+  if (rwd.isMobile.value || rwd.isTablet.value) {
+    store.isMobileDialogShow = true;
   } else {
-    const fileInput = ref('file') as any;
-    fileInput.value.click();
+    fileRef.value!.click();
   }
 }
 
 const handleClose = () => {
-  isMobileDialogShow.value = false;
+  store.isMobileDialogShow = false;
 }
 </script>
 
@@ -44,10 +38,10 @@ const handleClose = () => {
         srcset="@/assets/select-photo-button@2x.webp 2x,
                 @/assets/select-photo-button@3x.webp 3x"
                 @click="handleClick">
-      <input type="file" ref="file" accept="image/*" @change="handleFileChange" style="display: none">
+      <input type="file" ref="fileRef" accept="image/*" @change="handleFileChange" style="display: none">
     </button>
     <p>建議使用沒有帽子或髮飾遮擋頭髮的照片為佳</p>
-    <MobilePictureSelectDialog v-if="isMobileDialogShow" @select="handleSelectFile" @close="handleClose" />
+    <MobilePictureSelectDialog v-if="store.isMobileDialogShow" @change="handleFileChange" @close="handleClose" />
   </div>
 </template>
 

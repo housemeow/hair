@@ -11,7 +11,6 @@ useCustomScrollbar();
   <div>
     <MainPage />
      <!-- <Crop /> -->
-    <!-- <router-view /> -->
     <MobileLandscapeDialog />
   </div>
 </template>

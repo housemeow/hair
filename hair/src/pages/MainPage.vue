@@ -1,24 +1,19 @@
 <script setup lang="ts">
 import PrepareView from '@/components/PrepareView/PrepareView.vue';
 import MainView from '@/components/MainView/MainView.vue';
-import { ref } from 'vue';
+import { useMainStore } from '@/stores';
 
-type ViewState = 'prepare' | 'main';
-const state = ref<ViewState>('main');
-
-const handleBack = () => {
-  state.value = 'prepare';
-}
+const store = useMainStore();
 </script>
 
 <template>
   <div class="background">
-    <select class="fixed top-[0em] left-0 z-50" name="" id="" v-model="state">
+    <select class="fixed top-[0em] left-0 z-50" name="" id="" v-model="store.viewState">
       <option value="prepare">Prepare</option>
       <option value="main">Main</option>
     </select>
-    <PrepareView v-if="state==='prepare'" class="main" />
-    <MainView v-else-if="state==='main'" class="main" @back="handleBack" />
+    <PrepareView v-if="store.viewState==='prepare'" class="main" />
+    <MainView v-else-if="store.viewState==='main'" class="main" />
     <footer>Copyright © 2025 AND SHADOW. All rights reserved.</footer>
   </div>
 </template>

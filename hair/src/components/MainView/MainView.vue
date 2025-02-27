@@ -11,7 +11,7 @@ const selectedCategory = ref(0)
 const selectedHairColor = ref(0)
 const selectedHairColorValue = ref(0)
 const products = ['long11.png', 'long12.png', 'short21.png', 'short22.png', 'short23.png', 'short24.png']
-const productDialog = ref(true)
+const productDialog = ref(false)
 const infoVisible = ref(false)
 const infoRef = ref<HTMLSpanElement>()
 

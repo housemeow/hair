@@ -6,66 +6,60 @@ import {
 
 import CanvasRenderer from "@/canvasRenderer";
 import Rect from "@/rect";
-import type { RenderMode } from "@/type";
+import type { RenderMode, WasmFileset } from "@/type";
 import HairSegmenter from "@/hairSegment";
 import PersonDetector from "@/personDetector";
 
 interface HairProcessorOptions {
   src: string
-  width: number
-  height: number
   hairColor: number[]
   renderMode: RenderMode
   confidenceThreshold1: number
   confidenceThreshold2: number
-  img: HTMLImageElement
+  // img: HTMLImageElement
   blur: number
-  canvas: HTMLCanvasElement
 }
 
 class HairProcessor {
   src: string
-  width: number;
-  height: number;
+  width!: number;
+  height!: number;
   hairSegmenter: HairSegmenter;
   personDetector: PersonDetector;
   imageSegmenter!: ImageSegmenter;
   objectDetector!: ObjectDetector;
-  canvasRenderer: CanvasRenderer;
+  canvasRenderer!: CanvasRenderer;
   img: HTMLImageElement;
   renderMode!: RenderMode;
   hairColor: any;
-  unionRect: any;
-  loaded: boolean;
+  unionRect!: Rect;
   picture: HTMLImageElement;
   croppedImage: string;
   blur: number;
+  wasm!: WasmFileset;
 
   constructor(options: HairProcessorOptions) {
     const {
       src,
-      width,
-      height,
       hairColor,
       renderMode,
-      img,
-      canvas,
+      // img,
     } = options;
     this.src = src;
-    this.width = width
-    this.height = height
-    this.img = new Image()
     this.hairSegmenter = new HairSegmenter()
     this.personDetector = new PersonDetector()
     this.hairColor = hairColor;
     this.renderMode = renderMode;
-    const ctx = canvas.getContext('2d')
-    this.canvasRenderer = new CanvasRenderer(ctx!);
-    this.img = img;
-    this.loaded = false
+    // this.img = img;
+    this.img = new Image()
     this.picture = new Image()
     this.croppedImage = ''
     this.blur = 0;
+  }
+
+  setCanvas(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d')
+    this.canvasRenderer = new CanvasRenderer(ctx!);
   }
 
   async updateSrc(src: string) {
@@ -80,7 +74,12 @@ class HairProcessor {
     ])
     console.log('img', img.width, img.height)
 
+    if (this.hairSegmenter.rect.width === 0 || this.hairSegmenter.rect.height === 0) {
+      throw new Error('No hair detected')
+    }
+
     this.unionRect = Rect.union([this.hairSegmenter.rect, this.personDetector.rect])
+
     console.log('rect', this.unionRect, this.hairSegmenter.rect, this.personDetector.rect)
     const canvas = document.createElement('canvas')
     canvas.width = this.unionRect.width
@@ -115,13 +114,15 @@ class HairProcessor {
     });
   }
 
-  async loadModel() {
-    const wasm = await FilesetResolver.forVisionTasks(
+  async loadWasm() {
+    this.wasm = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
     );
-    this.loaded = true
-    await this.hairSegmenter.load(wasm);
-    await this.personDetector.load(wasm);
+  }
+
+  async loadModel() {
+    await this.hairSegmenter.load(this.wasm);
+    await this.personDetector.load(this.wasm);
   }
 
   async render() {

@@ -6,16 +6,12 @@ const emit = defineEmits();
 const selfieFile = ref<HTMLInputElement>();
 const selectFile = ref<HTMLInputElement>();
 
+const handleClickFile = (e: Event) => {
+  (e.currentTarget as HTMLElement).querySelector('input')!.click();
+}
+
 const handleFileChange = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (file) {
-    console.log(file);
-  } else {
-    console.log('no file');
-  }
-  target.value = '';
-  emit('select', file);
+  emit('change', e);
 }
 
 const close = () => {
@@ -26,12 +22,12 @@ const close = () => {
 <template>
   <div class="mobile-picture-select-dialog" @click.self="close">
     <dialog>
-      <button>
+      <button @click="handleClickFile">
         <img src="@/assets/take-picture-icon.svg" alt="">
         <span>重新拍攝</span>
         <input ref="selfieFile" type="file" capture="user" accept="image/*" @change="handleFileChange" style="display: none">
       </button>
-      <button>
+      <button @click="handleClickFile">
         <img src="@/assets/choice-file-icon.svg" alt="">
         <span>選擇現成檔案</span>
         <input ref="selectFile" type="file" accept="image/*" @change="handleFileChange" style="display: none">

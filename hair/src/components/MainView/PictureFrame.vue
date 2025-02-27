@@ -13,12 +13,13 @@ import shadowBottomRight from '@/assets/shadow_br.png';
 import maskTopLeft from '@/assets/mask_tl.png';
 import maskTopRight from '@/assets/mask_tr.png';
 import { useRwd } from '@/composables/rwd';
+import { useMainStore } from '@/stores';
+
+const store = useMainStore();
 const pictureCanvasRef = ref<HTMLCanvasElement>();
 const hairCanvasRef = ref<HTMLCanvasElement>();
 const shadowCanvasRef = ref<HTMLCanvasElement>();
 const { isMobile } = useRwd();
-
-const emit = defineEmits(['back'])
 const timer = ref<number | null>(null)
 
 onMounted(() => {
@@ -146,7 +147,7 @@ const render = async () => {
 onMounted(render)
 
 const handleBack = () => {
-  emit('back')
+  store.viewState = 'prepare';
 }
 </script>
 

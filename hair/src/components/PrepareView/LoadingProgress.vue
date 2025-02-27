@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { useMainStore } from '@/stores';
 
-const progress = ref(0.3);
-const percent = computed(() => progress.value * 100);
-const barWidth = computed(() => `${percent.value}%`);
+const store = useMainStore();
 </script>
 
 <template>
   <div class="loading-progress flex flex-col items-center justify-center w-[270px] h-[50px]">
     <span>Loading...</span>
-    <div class="bar-container mt-[2px]"><div :style="{ width: barWidth}"></div></div>
-    <span class="mt[4px]">{{percent}}%</span>
+    <div class="bar-container mt-[2px]"><div :style="{ width: store.loadingProgressWidth}"></div></div>
+    <span class="mt[4px]">{{store.displayPercent}}%</span>
   </div>
 </template>
 

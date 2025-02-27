@@ -2,25 +2,39 @@
 import LoadingProgress from '@/components/PrepareView/LoadingProgress.vue';
 import ErrorView from '@/components/PrepareView/ErrorDialog.vue';
 import PictureSelectButton from '@/components/PrepareView/PictureSelectButton.vue';
-import { ref } from 'vue';
+import { useMainStore } from '@/stores';
+import { onMounted } from 'vue';
 
-const loading = ref(true);
-const error = ref(false);
+const store = useMainStore();
+
+const handleFileSelect = (event: Event) => {
+  store.setFile(event);
+}
+
+onMounted(() => {
+  store.loadingTotal = 3
+  const interval = setInterval(() => {
+    store.loadingCount += 1
+
+    if (store.loadingRatio === 1) {
+      clearInterval(interval)
+    }
+  }, 1000)
+})
 </script>
 
 <template>
   <div class="prepare-view">
-    <label class="fixed top-[1em] left-[1em] z-50" for="loading"><input id="loading" type="checkbox" v-model="loading"> Loading</label>
-    <label class="fixed top-[2em] left-[1em] z-50" for="error"><input id="error" type="checkbox" v-model="error"> Error</label>
+    <label class="fixed top-[2em] left-[1em] z-50" for="error"><input id="error" type="checkbox" v-model="store.fileError">Error</label>
     <img
       src="@/assets/logo.webp"
       srcset="@/assets/logo@2x.webp 2x,
               @/assets/logo@3x.webp 3x">
     <h1>歡迎使用安夏朵智慧Ai髮色系統</h1>
     <p>最適合亞洲人的矯/補色洗髮精 <br/>隨心所欲玩轉髮色 So easy</p>
-    <LoadingProgress v-if="loading "/>
-    <PictureSelectButton v-else />
-    <ErrorView v-if="error" />
+    <LoadingProgress v-if="store.loadingVisible"/>
+    <PictureSelectButton v-else @change="handleFileSelect" />
+    <ErrorView v-if="store.fileError" />
   </div>
 </template>
 
