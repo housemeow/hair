@@ -73,27 +73,27 @@ const onFileChange = (e: Event) => {
   reader.readAsDataURL(file);
 }
 
-onMounted(async () => {
-  await load()
-  isHairProcessorLoading.value = true;
-  hairProcessor.value = new HairProcessor({
-    height: canvasRef.value?.clientWidth!,
-    width: canvasRef.value?.clientHeight!,
-    src: imgSrc.value,
-    canvas: canvasRef.value as HTMLCanvasElement,
-    confidenceThreshold1: 0.5,
-    confidenceThreshold2: 0.7,
-    hairColor: selectedColor.value,
-    img: imgRef.value as HTMLImageElement,
-    renderMode: "category",
-    blur: blur.value,
-  })
-  await hairProcessor.value!.loadModel();
-  await hairProcessor.value!.updateSrc(defaultImg)
-  await hairProcessor.value!.render()
+// onMounted(async () => {
+//   await load()
+//   isHairProcessorLoading.value = true;
+//   hairProcessor.value = new HairProcessor({
+//     height: canvasRef.value?.clientWidth!,
+//     width: canvasRef.value?.clientHeight!,
+//     src: imgSrc.value,
+//     canvas: canvasRef.value as HTMLCanvasElement,
+//     confidenceThreshold1: 0.5,
+//     confidenceThreshold2: 0.7,
+//     hairColor: selectedColor.value,
+//     img: imgRef.value as HTMLImageElement,
+//     renderMode: "category",
+//     blur: blur.value,
+//   })
+//   await hairProcessor.value!.loadModel();
+//   await hairProcessor.value!.updateSrc(defaultImg)
+//   await hairProcessor.value!.render()
 
-  isHairProcessorLoading.value = false;
-})
+//   isHairProcessorLoading.value = false;
+// })
 </script>
 
 <template>
