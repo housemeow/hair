@@ -28,10 +28,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Change working directory
-        run: cd hair
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Change working directory
+        run: cd hair
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
