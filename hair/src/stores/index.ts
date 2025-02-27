@@ -1,7 +1,8 @@
 import CanvasRenderer from '@/canvasRenderer';
 import Database from '@/database';
+import type { AppConfig, HairColor } from '@/database';
 import HairProcessor from '@/hairProcessor';
-import { defineStore, storeToRefs } from 'pinia';
+import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 type ViewState = 'prepare' | 'main';
@@ -17,6 +18,12 @@ export const useMainStore = defineStore('main', () => {
 
   // global state
   const viewState = ref<ViewState>('prepare');
+  const colors = ref<HairColor[]>([]);
+  const config = ref<AppConfig>({
+    blur: 0,
+    confidenceThreshold1: 0.5,
+    confidenceThreshold2: 0.5,
+  })
 
   // loading state
   const LOADING_DISPLAY_FLOATING = 0
@@ -64,35 +71,61 @@ export const useMainStore = defineStore('main', () => {
   }, 1000 / LOADING_FPS)
 
   async function load() {
-    loadingTotal.value = 4 // database, wasm, personal detector, hair segmenter
+    interface LoadTask {
+      name: string
+      task: (data: any) => Promise<any>
+      children?: LoadTask[]
+    }
 
-    await database.value.load().then(() => {
-      loadingCount.value++
-      console.log('database loaded')
-    })
-    hairProcessor.value = new HairProcessor({
-      blur: 0,
-      confidenceThreshold1: 0.5,
-      confidenceThreshold2: 0.5,
-      src: '',
-      renderMode: 'category',
-      hairColor: [0, 0, 0, 0],
+    const tasks: LoadTask[] = [
+      {
+        name: 'database', task: async () => {
+          const data = await database.value.load()
+          colors.value = data.colors
+          config.value = data.config
 
-    })
-    hairProcessor.value.loadWasm()
-      .then(() => {
+          return data
+        }, children: [
+          {
+            name: 'initHairProcessor', task: async (data: Awaited<ReturnType<Database['load']>>) => {
+              hairProcessor.value = new HairProcessor({
+                blur: 0,
+                confidenceThreshold1: 0.5,
+                confidenceThreshold2: 0.5,
+                hairColor: data.colors[0].color,
+                renderMode: 'category',
+                src: '',
+              })
+            }, children: [
+              {
+                name: 'wasm', task: async () => hairProcessor.value.loadWasm(), children: [
+                  { name: 'personal detector', task: async () => hairProcessor.value.loadPersonalDetector() },
+                  { name: 'hair segmenter', task: async () => hairProcessor.value.loadHairSegmenter() },
+                ]
+              },
+            ]
+          }
+        ],
+      },
+    ]
+
+    function getNestedTaskCount(tasks: LoadTask[]): number {
+      return tasks.length + tasks.reduce((acc, task) => acc + (task.children ? getNestedTaskCount(task.children) : 0), 0)
+    }
+    loadingTotal.value = getNestedTaskCount(tasks)
+
+    async function runTasks(tasks: LoadTask[], args?: any) {
+      return Promise.all(tasks.map(async (task) => {
+        const data = await task.task(args)
         loadingCount.value++
-        console.log('wasm loaded')
+        console.log(`loaded: ${task.name} (${loadingCount.value}/${loadingTotal.value})`)
+        if (task.children) {
+          await runTasks(task.children, data)
+        }
+      }))
+    }
 
-        hairProcessor.value.loadPersonalDetector().then(() => {
-          loadingCount.value++
-          console.log('personal detector loaded')
-        })
-        hairProcessor.value.loadHairSegmenter().then(() => {
-          loadingCount.value++
-          console.log('hair segmenter loaded')
-        })
-      })
+    return runTasks(tasks)
   }
 
   // file selection state
@@ -130,6 +163,8 @@ export const useMainStore = defineStore('main', () => {
   }
 
   return {
+    colors,
+    config,
     loading,
     loadingVisible,
     fileError,

@@ -19,7 +19,6 @@ onMounted(() => {
 <template>
   <div class="prepare-view">
     <main>
-      <label class="fixed top-[2em] left-[1em] z-50" for="error"><input id="error" type="checkbox" v-model="store.fileError">Error</label>
       <img
         src="@/assets/logo.webp"
         srcset="@/assets/logo@2x.webp 2x,

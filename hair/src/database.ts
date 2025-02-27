@@ -1,9 +1,33 @@
+export interface HairProduct {
+  name: string
+  usage: string
+}
+
+export interface HairColor {
+  name: string
+  category: string
+  product1: HairProduct
+  product2: HairProduct
+  link: string
+  color: number[]
+}
+
+export interface AppConfig {
+  confidenceThreshold1: number
+  confidenceThreshold2: number
+  blur: number
+}
+
 class Database {
   colorUrl: string;
   configUrl: string;
+  colors: HairColor[];
+  config: { confidenceThreshold1: number; confidenceThreshold2: number; };
   constructor(colorUrl: string, configUrl: string) {
     this.colorUrl = colorUrl;
     this.configUrl = configUrl;
+    this.colors = [];
+    this.config = { confidenceThreshold1: 0.5, confidenceThreshold2: 0.5 };
   }
 
   async load() {
@@ -14,12 +38,13 @@ class Database {
 
         const headerMap: Record<string, number> = {};
         // 產品名稱	色系	R	G	B	色彩增值alpha
-        headerMap.nameIndex = header
-          .split("\t")
-          .findIndex((col) => col === "產品名稱");
-        headerMap.categoryIndex = header
-          .split("\t")
-          .findIndex((col) => col === "色系");
+        headerMap.nameIndex = header.split("\t").findIndex((col) => col === "產品名稱");
+        headerMap.categoryIndex = header.split("\t").findIndex((col) => col === "色系");
+        headerMap.product1Name = header.split("\t").findIndex((col) => col === "商品1名稱");
+        headerMap.product1Usage = header.split("\t").findIndex((col) => col === "商品1操作");
+        headerMap.product2Name = header.split("\t").findIndex((col) => col === "商品2名稱");
+        headerMap.product2Usage = header.split("\t").findIndex((col) => col === "商品2操作");
+        headerMap.link = header.split("\t").findIndex((col) => col === "購物連結");
         headerMap.rIndex = header.split("\t").findIndex((col) => col === "R");
         headerMap.gIndex = header.split("\t").findIndex((col) => col === "G");
         headerMap.bIndex = header.split("\t").findIndex((col) => col === "B");
@@ -47,6 +72,15 @@ class Database {
           return {
             name: cells[headerMap.nameIndex],
             category: cells[headerMap.categoryIndex],
+            product1: {
+              name: cells[headerMap.product1Name],
+              usage: cells[headerMap.product1Usage],
+            },
+            product2: {
+              name: cells[headerMap.product2Name],
+              usage: cells[headerMap.product2Usage],
+            },
+            link: cells[headerMap.link],
             color: [r, g, b, a],
           };
         });
@@ -73,6 +107,7 @@ class Database {
         const config = {
           confidenceThreshold1: 0.5,
           confidenceThreshold2: 0.5,
+          blur: 0,
         };
 
         rows
@@ -84,10 +119,16 @@ class Database {
             if (argument === "confidenceThreshold2") {
               config.confidenceThreshold2 = parseFloat(value);
             }
+            if (argument === "blur") {
+              config.blur = parseInt(value);
+            }
           });
 
         return config;
       });
+
+    this.colors = colors;
+    this.config = config;
 
     return {
       colors,
