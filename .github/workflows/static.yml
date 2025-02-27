@@ -28,6 +28,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Change working directory
+        run: cd hair
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Node
@@ -37,17 +39,15 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-        working-directory: ./hair
       - name: Build
         run: npm run build
-        working-directory: ./hair
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist folder
-          path: "./hair/dist"
+          path: "./dist"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
