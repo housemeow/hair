@@ -8,10 +8,6 @@ const store = useMainStore();
 
 <template>
   <div class="background">
-    <select class="fixed top-[0em] left-0 z-50" name="" id="" v-model="store.viewState">
-      <option value="prepare">Prepare</option>
-      <option value="main">Main</option>
-    </select>
     <PrepareView v-if="store.viewState==='prepare'" class="main" />
     <MainView v-else-if="store.viewState==='main'" class="main" />
     <footer>Copyright © 2025 AND SHADOW. All rights reserved.</footer>

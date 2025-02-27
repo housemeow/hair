@@ -12,14 +12,7 @@ const handleFileSelect = (event: Event) => {
 }
 
 onMounted(() => {
-  store.loadingTotal = 3
-  const interval = setInterval(() => {
-    store.loadingCount += 1
-
-    if (store.loadingRatio === 1) {
-      clearInterval(interval)
-    }
-  }, 1000)
+  store.load()
 })
 </script>
 

@@ -29,37 +29,44 @@ class HairProcessor {
   imageSegmenter!: ImageSegmenter;
   objectDetector!: ObjectDetector;
   canvasRenderer!: CanvasRenderer;
-  img: HTMLImageElement;
   renderMode!: RenderMode;
   hairColor: any;
   unionRect!: Rect;
-  picture: HTMLImageElement;
-  croppedImage: string;
+  croppedImage: HTMLImageElement;
+  croppedBase64: string;
   blur: number;
   wasm!: WasmFileset;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
 
   constructor(options: HairProcessorOptions) {
     const {
       src,
       hairColor,
       renderMode,
-      // img,
     } = options;
     this.src = src;
     this.hairSegmenter = new HairSegmenter()
     this.personDetector = new PersonDetector()
     this.hairColor = hairColor;
     this.renderMode = renderMode;
-    // this.img = img;
-    this.img = new Image()
-    this.picture = new Image()
-    this.croppedImage = ''
+    this.croppedBase64 = ''
+    this.croppedImage = new Image()
     this.blur = 0;
   }
 
-  setCanvas(canvas: HTMLCanvasElement) {
-    const ctx = canvas.getContext('2d')
-    this.canvasRenderer = new CanvasRenderer(ctx!);
+  async loadWasm() {
+    this.wasm = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
+    );
+  }
+
+  async loadHairSegmenter() {
+    await this.hairSegmenter.load(this.wasm);
+  }
+
+  async loadPersonalDetector() {
+    await this.personDetector.load(this.wasm);
   }
 
   async updateSrc(src: string) {
@@ -68,6 +75,7 @@ class HairProcessor {
       img.onload = () => resolve()
       img.src = src;
     })
+    console.log('srcImage', img.naturalWidth, img.naturalHeight)
     await Promise.all([
       this.hairSegmenter.createSegment(img),
       this.personDetector.detect(img),
@@ -86,46 +94,18 @@ class HairProcessor {
     canvas.height = this.unionRect.height
     const ctx = canvas.getContext('2d')!
     ctx.drawImage(img, this.unionRect.left, this.unionRect.top, this.unionRect.width, this.unionRect.height, 0, 0, this.unionRect.width, this.unionRect.height)
-    this.croppedImage = canvas.toDataURL("image/png");
+    this.croppedBase64 = canvas.toDataURL("image/png");
 
     await new Promise<void>(resolve => {
-      this.picture.onload = () => resolve()
-      this.picture.src = this.croppedImage
+      this.croppedImage.onload = () => resolve()
+      this.croppedImage.src = this.croppedBase64
     })
-    await new Promise<void>(resolve => {
-      this.img.onload = () => resolve()
-      this.img.src = this.croppedImage
-    })
-    this.hairSegmenter.createSegment(this.picture)
-    console.log('this.picture', this.picture.width, this.picture.height)
-    console.log('this.img', this.img.width, this.img.height)
-    this.canvasRenderer.setSize(this.picture.width, this.picture.height)
-  }
-
-  async updateImgSrc(src: string) {
-    this.img.src = src;
-
-    return new Promise<void>((resolve) => {
-      this.img.onload = () => {
-        this.width = this.img.naturalWidth;
-        this.height = this.img.naturalHeight;
-        resolve();
-      };
-    });
-  }
-
-  async loadWasm() {
-    this.wasm = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
-    );
-  }
-
-  async loadModel() {
-    await this.hairSegmenter.load(this.wasm);
-    await this.personDetector.load(this.wasm);
+    this.hairSegmenter.createSegment(this.croppedImage)
+    console.log('this.croppedImage', this.croppedImage.naturalWidth, this.croppedImage.naturalHeight)
   }
 
   async render() {
+    // this.canvasRenderer.setSize(this.croppedImage.width, this.croppedImage.height)
     const canvas = document.createElement('canvas')
     canvas.width = this.unionRect.width
     canvas.height = this.unionRect.height

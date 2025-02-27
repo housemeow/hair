@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { useMainStore } from '@/stores';
+
+const store = useMainStore();
+
+const handleClick = () => {
+  store.fileError = false
+}
 </script>
 
 <template>
@@ -6,7 +13,7 @@
     <dialog>
       <img src="@/assets/error-icon.svg" alt="">
       <p>!! 無法辨識你所選擇的圖片 !!</p>
-      <button>請用重新選擇其他張圖片, 謝謝。</button>
+      <button @click="handleClick">請用重新選擇其他張圖片, 謝謝。</button>
     </dialog>
   </div>
 </template>

@@ -1,7 +1,7 @@
 import CanvasRenderer from '@/canvasRenderer';
 import Database from '@/database';
 import HairProcessor from '@/hairProcessor';
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 type ViewState = 'prepare' | 'main';
@@ -64,9 +64,12 @@ export const useMainStore = defineStore('main', () => {
   }, 1000 / LOADING_FPS)
 
   async function load() {
-    loadingTotal.value = 3
+    loadingTotal.value = 4 // database, wasm, personal detector, hair segmenter
 
-    await database.value.load().then(() => loadingCount.value++)
+    await database.value.load().then(() => {
+      loadingCount.value++
+      console.log('database loaded')
+    })
     hairProcessor.value = new HairProcessor({
       blur: 0,
       confidenceThreshold1: 0.5,
@@ -77,15 +80,26 @@ export const useMainStore = defineStore('main', () => {
 
     })
     hairProcessor.value.loadWasm()
-      .then(() => loadingCount.value++)
-      .then(() => hairProcessor.value?.loadModel())
-      .then(() => loadingCount.value++)
+      .then(() => {
+        loadingCount.value++
+        console.log('wasm loaded')
+
+        hairProcessor.value.loadPersonalDetector().then(() => {
+          loadingCount.value++
+          console.log('personal detector loaded')
+        })
+        hairProcessor.value.loadHairSegmenter().then(() => {
+          loadingCount.value++
+          console.log('hair segmenter loaded')
+        })
+      })
   }
 
   // file selection state
   const fileError = ref(false);
   const isMobileDialogShow = ref(false);
   const selectedImage = ref('');
+  const croppedBase64 = ref('');
 
   function setFile(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -99,7 +113,16 @@ export const useMainStore = defineStore('main', () => {
         500
       );
       selectedImage.value = resizedDataURL;
-      viewState.value = 'main'
+
+      try {
+        await hairProcessor.value.updateSrc(resizedDataURL)
+        croppedBase64.value = hairProcessor.value.croppedBase64
+        viewState.value = 'main'
+      } catch (e) {
+        console.error(e)
+        fileError.value = true
+
+      }
       console.log(resizedDataURL)
     };
 
@@ -119,6 +142,7 @@ export const useMainStore = defineStore('main', () => {
     displayRatio,
     loadingProgressWidth,
     displayPercent,
+    croppedBase64,
     load,
     setFile,
   };

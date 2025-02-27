@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import sample from '@/assets/730f4b50ac85c7f8ba37e5b7847caf8d_0.jpg';
 import shadowMobileTopLeft from '@/assets/shadow_tl_1.png';
 import shadowTopLeft from '@/assets/shadow_tl_2.png';
 import shadowTop from '@/assets/shadow_t.png';
@@ -20,7 +19,7 @@ const pictureCanvasRef = ref<HTMLCanvasElement>();
 const hairCanvasRef = ref<HTMLCanvasElement>();
 const shadowCanvasRef = ref<HTMLCanvasElement>();
 const { isMobile } = useRwd();
-const timer = ref<number | null>(null)
+const timer = ref<NodeJS.Timeout>()
 
 onMounted(() => {
   window.addEventListener('resize', () => {
@@ -64,7 +63,7 @@ const render = async () => {
   })
 
   drawBackground(pictureCtx);
-  await drawPicture(pictureCtx, sample);
+  await drawPicture(pictureCtx, store.croppedBase64);
   await drawMask(pictureCtx);
 
   await drawMask(hairCtx);
