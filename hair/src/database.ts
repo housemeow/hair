@@ -7,7 +7,7 @@ export interface HairColor {
   name: string
   category: string
   product1: HairProduct
-  product2: HairProduct
+  product2: HairProduct | null
   link: string
   color: number[]
 }
@@ -76,13 +76,13 @@ class Database {
               name: cells[headerMap.product1Name],
               usage: cells[headerMap.product1Usage],
             },
-            product2: {
+            product2: cells[headerMap.product2Name] !== '-' ? {
               name: cells[headerMap.product2Name],
               usage: cells[headerMap.product2Usage],
-            },
+            } : null,
             link: cells[headerMap.link],
             color: [r, g, b, a],
-          };
+          } as HairColor;
         });
       });
 

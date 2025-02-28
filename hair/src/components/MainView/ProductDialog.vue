@@ -1,16 +1,23 @@
 <script setup lang="ts">
+import { useMainStore } from '@/stores';
 import HairImage from '../HairImage.vue';
+import type { PropType } from 'vue';
+import type { HairColor } from '@/database';
 
+const store = useMainStore()
 const props = defineProps({
   doubleProduct: {
     type: Boolean,
     default: false
   },
-  color: String
+  color: {
+    type: Object as PropType<HairColor>,
+    required: true,
+  }
 })
-const emit = defineEmits(['close'])
+
 const handleClick = () => {
-  emit('close')
+  store.productDialog = false
 }
 </script>
 

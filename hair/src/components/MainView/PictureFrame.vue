@@ -19,7 +19,7 @@ const pictureCanvasRef = ref<HTMLCanvasElement>();
 const hairCanvasRef = ref<HTMLCanvasElement>();
 const shadowCanvasRef = ref<HTMLCanvasElement>();
 const { isMobile } = useRwd();
-const timer = ref<NodeJS.Timeout>()
+const timer = ref<number>()
 
 onMounted(() => {
   window.addEventListener('resize', () => {

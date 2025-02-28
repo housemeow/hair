@@ -13,17 +13,24 @@ export const useMainStore = defineStore('main', () => {
   const CONFIG_DATABASE =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFFONBmJrC2GaZpGYI_gjXPWnOizakJK6l5AkXyZ7NxzBhkTaejfLEQTnjpUFrR3ZR_MD3UdNJhSEj/pub?gid=237858754&single=true&output=tsv";
 
-  const database = ref(new Database(COLOR_DATABASE, CONFIG_DATABASE))
-  const hairProcessor = ref<HairProcessor>();
 
   // global state
+  const database = ref(new Database(COLOR_DATABASE, CONFIG_DATABASE))
+  const hairProcessor = ref<HairProcessor>();
   const viewState = ref<ViewState>('prepare');
-  const colors = ref<HairColor[]>([]);
+  const productDialog = ref(false)
   const config = ref<AppConfig>({
     blur: 0,
     confidenceThreshold1: 0.5,
     confidenceThreshold2: 0.5,
   })
+
+  // product state
+  const colors = ref<HairColor[]>([]);
+  const categories = computed(() => colors.value
+    .filter((color, index) => colors.value.findIndex(c => c.category === color.category) === index)
+    .map(color => color.category)
+  )
 
   // loading state
   const LOADING_DISPLAY_FLOATING = 0
@@ -98,9 +105,9 @@ export const useMainStore = defineStore('main', () => {
               })
             }, children: [
               {
-                name: 'wasm', task: async () => hairProcessor.value.loadWasm(), children: [
-                  { name: 'personal detector', task: async () => hairProcessor.value.loadPersonalDetector() },
-                  { name: 'hair segmenter', task: async () => hairProcessor.value.loadHairSegmenter() },
+                name: 'wasm', task: async () => hairProcessor.value!.loadWasm(), children: [
+                  { name: 'personal detector', task: async () => hairProcessor.value!.loadPersonalDetector() },
+                  { name: 'hair segmenter', task: async () => hairProcessor.value!.loadHairSegmenter() },
                 ]
               },
             ]
@@ -148,8 +155,8 @@ export const useMainStore = defineStore('main', () => {
       selectedImage.value = resizedDataURL;
 
       try {
-        await hairProcessor.value.updateSrc(resizedDataURL)
-        croppedBase64.value = hairProcessor.value.croppedBase64
+        await hairProcessor.value!.updateSrc(resizedDataURL)
+        croppedBase64.value = hairProcessor.value!.croppedBase64
         viewState.value = 'main'
       } catch (e) {
         console.error(e)
@@ -163,6 +170,7 @@ export const useMainStore = defineStore('main', () => {
   }
 
   return {
+    categories,
     colors,
     config,
     loading,
@@ -178,6 +186,7 @@ export const useMainStore = defineStore('main', () => {
     loadingProgressWidth,
     displayPercent,
     croppedBase64,
+    productDialog,
     load,
     setFile,
   };

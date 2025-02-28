@@ -1,26 +1,23 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 import ProductDialog from '@/components/MainView/ProductDialog.vue';
 import PictureFrame from '@/components/MainView/PictureFrame.vue';
 import HairImage from '@/components/HairImage.vue';
+import { useMainStore } from '@/stores';
 
+const store = useMainStore()
+
+const categoryRef = ref<HTMLUListElement>()
+const hairRef = ref<HTMLUListElement>()
 const doubleProduct = ref();
-const categories = ref(['11號', '12號', '粉色系', '紫色系', '灰色系', '藍色系'])
-const colors = ref(['hair1', 'hair2', 'hair3', 'hair4', 'hair5', 'hair6', 'hair7', 'hair8', 'hair9', 'hair10', 'hair11', 'hair12', 'hair13', 'hair14', 'hair15', 'hair16', 'hair17', 'hair18', 'hair19', 'hair20'])
 const selectedCategory = ref(0)
 const selectedHairColor = ref(0)
 const selectedHairColorValue = ref(0)
-const products = ['long11.png', 'long12.png', 'short21.png', 'short22.png', 'short23.png', 'short24.png']
-const productDialog = ref(false)
 const infoVisible = ref(false)
 const infoRef = ref<HTMLSpanElement>()
 
 const showProduct = () => {
-  productDialog.value = true
-}
-
-const handleClose = () => {
-  productDialog.value = false
+  store.productDialog = true
 }
 
 const handleClickOutside = (e: MouseEvent) => {
@@ -67,24 +64,84 @@ const handleScroll = (list: HTMLUListElement, setIndex: (i: number, ratio: numbe
   }
 }
 
+const scrollTimer = ref(0)
+const mainScroller = ref<'empty'|'category'|'hair'>('empty')
+
+const updateScrollTimer = () => {
+  clearTimeout(scrollTimer.value)
+  scrollTimer.value = setTimeout(() => {
+    mainScroller.value = 'empty'
+  }, 30)
+}
+
+const moveHairToCategory = (newCategoryIndex: number, force?: boolean) => {
+  let scrollToIndex = null
+  // new position is on the left, move to the most right color
+  if (newCategoryIndex < selectedCategory.value) {
+    for (let i = store.colors.length - 1; i >= 0; i--) {
+      if (store.colors[i].category === store.categories[newCategoryIndex]) {
+        scrollToIndex = i
+        break
+      }
+    }
+  // new position is on the right, move to the most left color
+  } else if (force || newCategoryIndex > selectedCategory.value) {
+    for (let i = 0; i < store.colors.length; i++) {
+      if (store.colors[i].category === store.categories[newCategoryIndex]) {
+        scrollToIndex = i
+        break
+      }
+    }
+  }
+  if (scrollToIndex === null) {
+    return;
+  }
+  const hairList = hairRef.value!
+  const child = hairList.children[scrollToIndex] as HTMLLIElement
+  scrollToItem(child)
+}
+
 const handleCategoryScroll = (e: Event) => {
-  handleScroll(e.target as HTMLUListElement, (i) => {
-    selectedCategory.value = i
+  updateScrollTimer()
+  handleScroll(e.target as HTMLUListElement, (newCategoryIndex) => {
+    if (mainScroller.value === 'empty' || mainScroller.value === 'category') {
+      mainScroller.value = 'category'
+      moveHairToCategory(newCategoryIndex)
+    }
+
+    selectedCategory.value = newCategoryIndex
   })
 }
 
+const moveCategoryToHair = (newColorIndex: number, force?: boolean) => {
+  const originalCategoryIndex = store.categories.findIndex(category => category === store.colors[selectedHairColor.value].category)
+  const newCategoryIndex = store.categories.findIndex(category => category === store.colors[newColorIndex].category)
+  if (!(force || originalCategoryIndex !== newCategoryIndex)) {
+    return;
+  }
+  const categoryList = categoryRef.value!
+  const child = categoryList.children[newCategoryIndex] as HTMLLIElement
+  scrollToItem(child)
+}
+
 const handleHairColorScroll = (e: Event) => {
-  handleScroll(e.target as HTMLUListElement, (i, ratio) => {
-    selectedHairColor.value = i
+  updateScrollTimer()
+  handleScroll(e.target as HTMLUListElement, (newColorIndex, ratio) => {
+    if (mainScroller.value === 'empty' || mainScroller.value === 'hair') {
+      mainScroller.value = 'hair'
+      moveCategoryToHair(newColorIndex)
+    }
+
+    selectedHairColor.value = newColorIndex
     selectedHairColorValue.value = ratio
   })
 }
 const getCategoryClass = (category: string) => {
-  return categories.value.findIndex(value => value === category) === selectedCategory.value ? 'active' : ''
+  return store.categories.findIndex(value => value === category) === selectedCategory.value ? 'active' : ''
 }
 
 const getHairColorClass = (color: string) => {
-  const index = colors.value.findIndex(value => value === color)
+  const index = store.colors.findIndex(value => value.name === color)
   if (index === selectedHairColor.value) {
     return 'active'
   } else if (index === selectedHairColor.value - 1 || index === selectedHairColor.value + 1) {
@@ -94,7 +151,7 @@ const getHairColorClass = (color: string) => {
 }
 
 const getHairColorStyle = (color: string) => {
-  const index = colors.value.findIndex(value => value === color)
+  const index = store.colors.findIndex(value => value.name === color)
   let ratio = 0;
   ratio = Math.abs((index - selectedHairColorValue.value)) / 2
   ratio = Math.min(1, Math.max(0, ratio))
@@ -108,15 +165,50 @@ const getHairColorStyle = (color: string) => {
   }
 }
 
-const scrollToItem = (e: MouseEvent) => {
-  const target = e.currentTarget as HTMLElement as HTMLLIElement
-  const list = target.parentElement as HTMLUListElement
+const touchStartCategory = () => {
+  mainScroller.value = 'category'
+}
+
+const wheelCategory = (e: WheelEvent) => {
+  mainScroller.value = 'category'
+}
+
+const touchEndCategory = () => {
+  moveHairToCategory(selectedCategory.value, true)
+}
+
+const touchStartHair = () => {
+  mainScroller.value = 'hair'
+}
+
+const wheelHair = (e: WheelEvent) => {
+  mainScroller.value = 'hair'
+}
+
+const touchEndHair = () => {
+  moveCategoryToHair(selectedHairColor.value, true)
+}
+
+const scrollToItem = (item: HTMLElement) => {
+  const list = item.parentElement as HTMLUListElement
   const MARGIN_LEFT = list.clientWidth * 0.5
   const listBoundingClientRect = list.getBoundingClientRect()
-  const itemOffsetInScroller = (target.offsetLeft - listBoundingClientRect.left - MARGIN_LEFT)
-  const scrollLeft = target.clientWidth / 2 + itemOffsetInScroller
+  const itemOffsetInScroller = (item.offsetLeft - listBoundingClientRect.left - MARGIN_LEFT)
+  const scrollLeft = item.clientWidth / 2 + itemOffsetInScroller
 
   list.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+}
+
+const handleClickItem = (e: MouseEvent) => {
+  const target = e.currentTarget as HTMLElement as HTMLLIElement
+  scrollToItem(target)
+}
+
+const handleMove = (event: Event, direction: number) => {
+  const list = (event.currentTarget as HTMLElement).parentElement!.querySelector('ul') as HTMLUListElement
+  const targetIndex = Math.min(store.colors.length - 1, Math.max(0, selectedHairColor.value + direction))
+  const child = list.children[targetIndex] as HTMLLIElement
+  scrollToItem(child)
 }
 </script>
 
@@ -157,19 +249,19 @@ const scrollToItem = (e: MouseEvent) => {
           比7度更深的髮色不建議參考此效果</span>
       </span>
     </p>
-    <ul class="category" @scroll="handleCategoryScroll">
-      <li v-for="category in categories" :class="getCategoryClass(category)" @click="scrollToItem($event)">{{ category }}</li>
+    <ul ref="categoryRef" class="category" @scroll="handleCategoryScroll" @touchstart="touchStartCategory" @touchend="touchEndCategory" @wheel="wheelCategory">
+      <li v-for="category in store.categories" :class="getCategoryClass(category)" @click="handleClickItem($event)">{{ category }}</li>
     </ul>
     <div class="hair">
-      <img src="@/assets/left-arrow-button.svg" alt="">
-      <ul @scroll="handleHairColorScroll">
-        <li v-for="color in colors" :class="getHairColorClass(color)" :style="getHairColorStyle(color)" @click="scrollToItem($event)">
+      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, -1)" :class="{ invisible: selectedHairColor === 0 }">
+      <ul ref="hairRef" @scroll="handleHairColorScroll" @touchstart="touchStartHair" @touchend="touchEndHair" @wheel="wheelHair">
+        <li v-for="color in store.colors" :class="getHairColorClass(color.name)" :style="getHairColorStyle(color.name)" @click="handleClickItem($event)">
           <HairImage :color="color"/>
         </li>
       </ul>
-      <img src="@/assets/left-arrow-button.svg" alt="">
+      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, 1)" :class="{ invisible: selectedHairColor === store.colors.length - 1 }">
     </div>
-    <ProductDialog v-if="productDialog" @close="handleClose" :double-product="doubleProduct" />
+    <ProductDialog v-if="store.productDialog" :double-product="doubleProduct" :color="store.colors[0]" />
   </div>
 </template>
 
@@ -423,10 +515,13 @@ const scrollToItem = (e: MouseEvent) => {
         .hair-image {
           border: 2px solid transparent;
           padding: 2px;
-          border-radius: 50%;
           transition: 0.1s;
           width: var(--img-width);
           height: var(--img-height);
+
+          :deep(.mask) {
+            inset: 2px;
+          }
         }
 
         &::after {
@@ -440,8 +535,8 @@ const scrollToItem = (e: MouseEvent) => {
         }
 
         &.active {
-          img {
-            border-color: #707070;
+          .hair-image {
+            border-color: var(--hair-color);
           }
         }
       }
@@ -519,6 +614,12 @@ const scrollToItem = (e: MouseEvent) => {
         display: block;
         width: 12px;
         cursor: pointer;
+        transition: 0.1s;
+        opacity: 1;
+
+        &.invisible {
+          opacity: 0;
+        }
 
         &:first-child {
           margin-right: 10px;
