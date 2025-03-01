@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMainStore } from '@/stores';
-import HairImage from '../HairImage.vue';
+import DyedHair from '../DyedHair.vue';
 import ProductImage from '../ProductImage.vue';
 
 const store = useMainStore()
@@ -17,7 +17,7 @@ const handleClick = () => {
       <main class="no-scrollbar">
         <div class="part1">
           <figure>
-            <HairImage :color="store.selectedColor" />
+            <DyedHair :color="store.selectedColor" />
             <img src="@/assets/products/product-2-shadow.webp"
               srcset="@/assets/products/product-2-shadow@2x.webp 2x,
                       @/assets/products/product-2-shadow@3x.webp 3x"
@@ -151,7 +151,7 @@ const handleClick = () => {
           position: relative;
           align-self: center;
 
-          .hair-image {
+          .dyed-hair {
             width: 180px;
             height: 180px;
             margin-top: 48px;
@@ -573,7 +573,7 @@ const handleClick = () => {
             flex-direction: column;
             align-items: flex-start;
 
-            .hair-image {
+            .dyed-hair {
               margin-top: 0;
             }
 

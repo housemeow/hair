@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onUnmounted, ref, watch } from 'vue';
 import PictureFrame from '@/components/MainView/PictureFrame.vue';
-import HairImage from '@/components/HairImage.vue';
+import DyedHair from '@/components/DyedHair.vue';
 import { useMainStore } from '@/stores';
 import ProductImage from '../ProductImage.vue';
 import AnimatedProductDialog from '@/components/MainView/AnimatedProductDialog.vue';
@@ -263,7 +263,7 @@ const handleMove = (event: Event, direction: number) => {
       <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, -1)" :class="{ invisible: scrolledHairColor === 0 }">
       <ul ref="hairRef" class="no-scrollbar" @scroll="handleHairColorScroll" @touchstart="touchStartHair" @touchend="touchEndHair" @wheel="wheelHair">
         <li v-for="color in store.colors" :class="getHairColorClass(color.name)" :style="getHairColorStyle(color.name)" @click="handleClickItem($event)">
-          <HairImage :color="color"/>
+          <DyedHair :color="color"/>
         </li>
       </ul>
       <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, 1)" :class="{ invisible: scrolledHairColor === store.colors.length - 1 }">
@@ -520,7 +520,7 @@ const handleMove = (event: Event, direction: number) => {
         transition: 0.1s;
         cursor: pointer;
 
-        .hair-image {
+        .dyed-hair {
           border: 2px solid transparent;
           padding: 2px;
           transition: 0.1s;
@@ -543,7 +543,7 @@ const handleMove = (event: Event, direction: number) => {
         }
 
         &.active {
-          .hair-image {
+          .dyed-hair {
             border-color: var(--hair-color);
           }
         }

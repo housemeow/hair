@@ -13,7 +13,7 @@ const props = defineProps<{
   product: HairProduct;
 }>();
 
-const hairImage = computed(() => {
+const productImage = computed(() => {
   const productMapping = {
     'long11.png': long11,
     'long12.png': long12,
@@ -27,10 +27,5 @@ const hairImage = computed(() => {
 </script>
 
 <template>
-  <img class="product-image" :src="hairImage" alt="">
+  <img class="product-image" :src="productImage" alt="">
 </template>
-
-<style scoped lang="scss">
-.product-image {
-}
-</style>

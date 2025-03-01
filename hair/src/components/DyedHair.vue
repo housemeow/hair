@@ -13,14 +13,14 @@ const hairColor = computed(() => {
 </script>
 
 <template>
-  <div class="hair-image">
+  <div class="dyed-hair">
     <img src="@/assets/hair_sample.png" alt="">
     <div class="mask"></div>
   </div>
 </template>
 
 <style scoped lang="scss">
-.hair-image {
+.dyed-hair {
   --hair-color: v-bind('hairColor');
   position: relative;
   border-radius: 50%;
