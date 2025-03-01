@@ -25,8 +25,15 @@ onMounted(() => {
                 @/assets/logo@3x.webp 3x">
       <h1>歡迎使用安夏朵智慧Ai髮色系統</h1>
       <p>最適合亞洲人的矯/補色洗髮精 <br/>隨心所欲玩轉髮色 So easy</p>
-      <LoadingProgress v-if="store.loadingVisible"/>
-      <PictureSelectButton v-else @change="handleFileSelect" />
+      <div class="button-animate">
+        <Transition
+          enter-active-class="animate__animated animate__fadeIn"
+          leave-active-class="animate__animated animate__fadeOut"
+        >
+          <LoadingProgress v-if="store.loadingVisible"/>
+          <PictureSelectButton v-else @change="handleFileSelect" />
+        </Transition>
+      </div>
       <ErrorView v-if="store.fileError" />
     </main>
   </div>
@@ -79,13 +86,21 @@ onMounted(() => {
       color: #707070;
     }
 
-    .loading-progress {
+    .button-animate {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       margin-top: auto;
-    }
 
-    .picture-select-button {
-      margin-top: auto;
-      margin-bottom: -13px;
+      .loading-progress {
+        position: absolute;
+        bottom: 0;
+      }
+
+      .picture-select-button {
+        margin-bottom: -13px;
+      }
     }
   }
 }

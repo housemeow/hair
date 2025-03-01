@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onUnmounted, ref, watch } from 'vue';
-import ProductDialog from '@/components/MainView/ProductDialog.vue';
 import PictureFrame from '@/components/MainView/PictureFrame.vue';
 import HairImage from '@/components/HairImage.vue';
 import { useMainStore } from '@/stores';
 import ProductImage from '../ProductImage.vue';
+import AnimatedProductDialog from '@/components/MainView/AnimatedProductDialog.vue';
 
 const store = useMainStore()
 
@@ -220,7 +220,6 @@ const handleMove = (event: Event, direction: number) => {
                   @/assets/logo-header@3x.webp 3x"
           class="app">
     </header>
-    <label class="fixed top-[1em] left-[1em] z-50" for="doubleProduct"><input id="doubleProduct" type="checkbox" v-model="doubleProduct">Double Product</label>
     <PictureFrame />
     <button @click="showProduct"><img src="@/assets/book-icon.svg" alt="">
       產品使用說明
@@ -230,13 +229,21 @@ const handleMove = (event: Event, direction: number) => {
                   @/assets/products/product-2-shadow@3x.webp 3x"
           class="long-product-shadow">
         <ProductImage class="long-product" :product="store.selectedColor.product1" />
-        <template v-if="store.selectedColor.product2">
-          <img src="@/assets/products/product-1-shadow.webp"
+        <Transition
+          enter-active-class="animate__animated animate__fadeIn"
+          leave-active-class="animate__animated animate__fadeOut"
+        >
+          <img v-if="store.selectedColor.product2" src="@/assets/products/product-1-shadow.webp"
             srcset="@/assets/products/product-1-shadow@2x.webp 2x,
                     @/assets/products/product-1-shadow@3x.webp 3x"
             class="short-product-shadow">
-          <ProductImage class="short-product" :product="store.selectedColor.product2" />
-        </template>
+        </Transition>
+        <Transition
+          enter-active-class="animate__animated animate__fadeIn"
+          leave-active-class="animate__animated animate__fadeOut"
+        >
+        <ProductImage v-if="store.selectedColor.product2" class="short-product" :product="store.selectedColor.product2" />
+      </Transition>
       </figure>
     </button>
 
@@ -261,7 +268,7 @@ const handleMove = (event: Event, direction: number) => {
       </ul>
       <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, 1)" :class="{ invisible: scrolledHairColor === store.colors.length - 1 }">
     </div>
-    <ProductDialog v-if="store.productDialog" />
+    <AnimatedProductDialog />
   </div>
 </template>
 
