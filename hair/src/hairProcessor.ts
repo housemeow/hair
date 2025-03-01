@@ -36,8 +36,8 @@ class HairProcessor {
   croppedBase64: string;
   blur: number;
   wasm!: WasmFileset;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
+  canvas!: HTMLCanvasElement;
+  ctx!: CanvasRenderingContext2D;
 
   constructor(options: HairProcessorOptions) {
     const {
