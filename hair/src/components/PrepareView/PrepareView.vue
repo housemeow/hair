@@ -34,7 +34,12 @@ onMounted(() => {
           <PictureSelectButton v-else @change="handleFileSelect" />
         </Transition>
       </div>
-      <ErrorView v-if="store.fileError" />
+      <Transition
+        enter-active-class="animate__animated animate__fadeIn"
+        leave-active-class="animate__animated animate__fadeOut"
+      >
+        <ErrorView v-if="store.fileError" />
+      </Transition>
     </main>
   </div>
 </template>
