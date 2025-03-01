@@ -1,6 +1,7 @@
 export interface HairProduct {
   name: string
   usage: string
+  image: string
 }
 
 export interface HairColor {
@@ -42,8 +43,10 @@ class Database {
         headerMap.categoryIndex = header.split("\t").findIndex((col) => col === "色系");
         headerMap.product1Name = header.split("\t").findIndex((col) => col === "商品1名稱");
         headerMap.product1Usage = header.split("\t").findIndex((col) => col === "商品1操作");
+        headerMap.product1Image = header.split("\t").findIndex((col) => col === "商品1圖片");
         headerMap.product2Name = header.split("\t").findIndex((col) => col === "商品2名稱");
         headerMap.product2Usage = header.split("\t").findIndex((col) => col === "商品2操作");
+        headerMap.product2Image = header.split("\t").findIndex((col) => col === "商品2圖片");
         headerMap.link = header.split("\t").findIndex((col) => col === "購物連結");
         headerMap.rIndex = header.split("\t").findIndex((col) => col === "R");
         headerMap.gIndex = header.split("\t").findIndex((col) => col === "G");
@@ -75,10 +78,12 @@ class Database {
             product1: {
               name: cells[headerMap.product1Name],
               usage: cells[headerMap.product1Usage],
+              image: cells[headerMap.product1Image],
             },
             product2: cells[headerMap.product2Name] !== '-' ? {
               name: cells[headerMap.product2Name],
               usage: cells[headerMap.product2Usage],
+              image: cells[headerMap.product2Image],
             } : null,
             link: cells[headerMap.link],
             color: [r, g, b, a],

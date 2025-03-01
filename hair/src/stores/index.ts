@@ -19,6 +19,7 @@ export const useMainStore = defineStore('main', () => {
   const hairProcessor = ref<HairProcessor>();
   const viewState = ref<ViewState>('prepare');
   const productDialog = ref(false)
+  const infoVisible = ref(false)
   const config = ref<AppConfig>({
     blur: 0,
     confidenceThreshold1: 0.5,
@@ -31,6 +32,20 @@ export const useMainStore = defineStore('main', () => {
     .filter((color, index) => colors.value.findIndex(c => c.category === color.category) === index)
     .map(color => color.category)
   )
+  const selectedColor = ref<HairColor>({
+    category: '',
+    color: [0, 0, 0, 0],
+    link: '',
+    name: '',
+    product1: { name: '', usage: '' },
+    product2: null,
+  });
+
+  watch(() => selectedColor.value, (color) => {
+    if (color) {
+      hairProcessor.value!.hairColor = color.color
+    }
+  })
 
   // loading state
   const LOADING_DISPLAY_FLOATING = 0
@@ -95,11 +110,12 @@ export const useMainStore = defineStore('main', () => {
         }, children: [
           {
             name: 'initHairProcessor', task: async (data: Awaited<ReturnType<Database['load']>>) => {
+              selectedColor.value = data.colors[0]
               hairProcessor.value = new HairProcessor({
                 blur: 0,
                 confidenceThreshold1: 0.5,
                 confidenceThreshold2: 0.5,
-                hairColor: data.colors[0].color,
+                hairColor: selectedColor.value.color,
                 renderMode: 'category',
                 src: '',
               })
@@ -174,6 +190,8 @@ export const useMainStore = defineStore('main', () => {
     colors,
     config,
     loading,
+    selectedColor,
+    infoVisible,
     loadingVisible,
     fileError,
     isMobileDialogShow,

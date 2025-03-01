@@ -1,20 +1,9 @@
 <script setup lang="ts">
 import { useMainStore } from '@/stores';
 import HairImage from '../HairImage.vue';
-import type { PropType } from 'vue';
-import type { HairColor } from '@/database';
+import ProductImage from '../ProductImage.vue';
 
 const store = useMainStore()
-const props = defineProps({
-  doubleProduct: {
-    type: Boolean,
-    default: false
-  },
-  color: {
-    type: Object as PropType<HairColor>,
-    required: true,
-  }
-})
 
 const handleClick = () => {
   store.productDialog = false
@@ -28,25 +17,25 @@ const handleClick = () => {
       <main>
         <div class="part1">
           <figure>
-            <HairImage :color="color" />
+            <HairImage :color="store.selectedColor" />
             <img src="@/assets/products/product-2-shadow.webp"
               srcset="@/assets/products/product-2-shadow@2x.webp 2x,
                       @/assets/products/product-2-shadow@3x.webp 3x"
               class="long-product-shadow">
-            <img class="long-product" src="@/assets/products/long11.png" alt="">
-            <template v-if="doubleProduct">
+            <ProductImage class="long-product" :product="store.selectedColor.product1" />
+            <template v-if="store.selectedColor.product2">
               <img src="@/assets/products/product-1-shadow.webp"
                 srcset="@/assets/products/product-1-shadow@2x.webp 2x,
                         @/assets/products/product-1-shadow@3x.webp 3x"
                 class="short-product-shadow">
-                <img class="short-product" src="@/assets/products/short22.png" alt="">
+              <ProductImage class="short-product" :product="store.selectedColor.product2" />
             </template>
           </figure>
           <hgroup>
             <h1>安夏朵</h1>
             <h2>
-              矯色洗髮精 12
-              <template v-if="doubleProduct"><br />加強補色劑 23 羽灰</template></h2>
+              {{ store.selectedColor.product1.name }}
+              <template v-if="store.selectedColor.product2"><br />{{ store.selectedColor.product2.name }}</template></h2>
           </hgroup>
         </div>
         <div class="part2">
@@ -54,15 +43,15 @@ const handleClick = () => {
             <li>
               <h3>調配產品</h3>
               <p>根據髮長在 <em>搖搖瓶</em> 中加入約20-60ml的水，擠入適量的矯色或補色產品。</p>
-              <div class="product-mix" :class="{ 'double-product': props.doubleProduct }">
+              <div class="product-mix" :class="{ 'double-product': store.selectedColor.product2 }">
                 <div>
-                  <span>按4下</span>
+                  <span>按{{ store.selectedColor.product1.usage }}下</span>
                   <img class="long-product" src="@/assets/products/long11.png" alt="">
                 </div>
-                <template v-if="doubleProduct">
+                <template v-if="store.selectedColor.product2">
                   <img class="add-icon" src="@/assets/add-icon.svg" alt="">
                   <div>
-                    <span>按4下</span>
+                    <span>按{{ store.selectedColor.product2.usage }}下</span>
                     <img class="short-product" src="@/assets/products/short22.png" alt="">
                   </div>
                 </template>
@@ -99,7 +88,7 @@ const handleClick = () => {
               <p>沖洗後使用瞬間髮膜，吹乾前使用免沖洗護髮產品，然後吹乾頭髮。</p>
             </li>
           </ol>
-          <aside v-if="doubleProduct">
+          <aside v-if="store.selectedColor.product2">
             <span>備註</span>
             <p>圖示模擬真實洗出髮色效果<br />
       若有偏差，皆可自行調整比例<br />
@@ -111,7 +100,7 @@ const handleClick = () => {
       </main>
       <footer>
         <p>!! 隨心髮色組合優惠熱銷中 !!</p>
-        <a target="_blank" href="https://www.andshadow.com/"><img src="@/assets/product-link-icon.svg" alt="">點擊進入官網商品頁</a>
+        <a target="_blank" :href="store.selectedColor.link"><img src="@/assets/product-link-icon.svg" alt="">點擊進入官網商品頁</a>
       </footer>
     </dialog>
   </div>

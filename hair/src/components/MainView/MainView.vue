@@ -4,16 +4,15 @@ import ProductDialog from '@/components/MainView/ProductDialog.vue';
 import PictureFrame from '@/components/MainView/PictureFrame.vue';
 import HairImage from '@/components/HairImage.vue';
 import { useMainStore } from '@/stores';
+import ProductImage from '../ProductImage.vue';
 
 const store = useMainStore()
 
 const categoryRef = ref<HTMLUListElement>()
 const hairRef = ref<HTMLUListElement>()
-const doubleProduct = ref();
-const selectedCategory = ref(0)
-const selectedHairColor = ref(0)
-const selectedHairColorValue = ref(0)
-const infoVisible = ref(false)
+const scrolledCategory = ref(0)
+const scrolledHairColor = ref(0)
+const scrolledHairColorValue = ref(0)
 const infoRef = ref<HTMLSpanElement>()
 
 const showProduct = () => {
@@ -21,7 +20,7 @@ const showProduct = () => {
 }
 
 const handleClickOutside = (e: MouseEvent) => {
-  infoVisible.value = false
+  store.infoVisible = false
 
   console.log('info hide')
   if (infoRef.value && !infoRef.value.contains(e.target as Node)) {
@@ -30,9 +29,9 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 const handleClickInfo = (e: MouseEvent) => {
-  infoVisible.value = !infoVisible.value
+  store.infoVisible = !store.infoVisible
 
-  if (infoVisible.value) {
+  if (store.infoVisible) {
     e.stopPropagation()
     document.addEventListener('click', handleClickOutside)
   }
@@ -71,13 +70,14 @@ const updateScrollTimer = () => {
   clearTimeout(scrollTimer.value)
   scrollTimer.value = setTimeout(() => {
     mainScroller.value = 'empty'
+    store.selectedColor = store.colors[scrolledHairColor.value]
   }, 30)
 }
 
 const moveHairToCategory = (newCategoryIndex: number, force?: boolean) => {
   let scrollToIndex = null
   // new position is on the left, move to the most right color
-  if (newCategoryIndex < selectedCategory.value) {
+  if (newCategoryIndex < scrolledCategory.value) {
     for (let i = store.colors.length - 1; i >= 0; i--) {
       if (store.colors[i].category === store.categories[newCategoryIndex]) {
         scrollToIndex = i
@@ -85,7 +85,7 @@ const moveHairToCategory = (newCategoryIndex: number, force?: boolean) => {
       }
     }
   // new position is on the right, move to the most left color
-  } else if (force || newCategoryIndex > selectedCategory.value) {
+  } else if (force || newCategoryIndex > scrolledCategory.value) {
     for (let i = 0; i < store.colors.length; i++) {
       if (store.colors[i].category === store.categories[newCategoryIndex]) {
         scrollToIndex = i
@@ -109,12 +109,12 @@ const handleCategoryScroll = (e: Event) => {
       moveHairToCategory(newCategoryIndex)
     }
 
-    selectedCategory.value = newCategoryIndex
+    scrolledCategory.value = newCategoryIndex
   })
 }
 
 const moveCategoryToHair = (newColorIndex: number, force?: boolean) => {
-  const originalCategoryIndex = store.categories.findIndex(category => category === store.colors[selectedHairColor.value].category)
+  const originalCategoryIndex = store.categories.findIndex(category => category === store.colors[scrolledHairColor.value].category)
   const newCategoryIndex = store.categories.findIndex(category => category === store.colors[newColorIndex].category)
   if (!(force || originalCategoryIndex !== newCategoryIndex)) {
     return;
@@ -132,19 +132,19 @@ const handleHairColorScroll = (e: Event) => {
       moveCategoryToHair(newColorIndex)
     }
 
-    selectedHairColor.value = newColorIndex
-    selectedHairColorValue.value = ratio
+    scrolledHairColor.value = newColorIndex
+    scrolledHairColorValue.value = ratio
   })
 }
 const getCategoryClass = (category: string) => {
-  return store.categories.findIndex(value => value === category) === selectedCategory.value ? 'active' : ''
+  return store.categories.findIndex(value => value === category) === scrolledCategory.value ? 'active' : ''
 }
 
 const getHairColorClass = (color: string) => {
   const index = store.colors.findIndex(value => value.name === color)
-  if (index === selectedHairColor.value) {
+  if (index === scrolledHairColor.value) {
     return 'active'
-  } else if (index === selectedHairColor.value - 1 || index === selectedHairColor.value + 1) {
+  } else if (index === scrolledHairColor.value - 1 || index === scrolledHairColor.value + 1) {
     return 'middle'
   }
   return ''
@@ -153,7 +153,7 @@ const getHairColorClass = (color: string) => {
 const getHairColorStyle = (color: string) => {
   const index = store.colors.findIndex(value => value.name === color)
   let ratio = 0;
-  ratio = Math.abs((index - selectedHairColorValue.value)) / 2
+  ratio = Math.abs((index - scrolledHairColorValue.value)) / 2
   ratio = Math.min(1, Math.max(0, ratio))
 
   return {
@@ -174,7 +174,7 @@ const wheelCategory = (e: WheelEvent) => {
 }
 
 const touchEndCategory = () => {
-  moveHairToCategory(selectedCategory.value, true)
+  moveHairToCategory(scrolledCategory.value, true)
 }
 
 const touchStartHair = () => {
@@ -186,7 +186,7 @@ const wheelHair = (e: WheelEvent) => {
 }
 
 const touchEndHair = () => {
-  moveCategoryToHair(selectedHairColor.value, true)
+  moveCategoryToHair(scrolledHairColor.value, true)
 }
 
 const scrollToItem = (item: HTMLElement) => {
@@ -206,7 +206,7 @@ const handleClickItem = (e: MouseEvent) => {
 
 const handleMove = (event: Event, direction: number) => {
   const list = (event.currentTarget as HTMLElement).parentElement!.querySelector('ul') as HTMLUListElement
-  const targetIndex = Math.min(store.colors.length - 1, Math.max(0, selectedHairColor.value + direction))
+  const targetIndex = Math.min(store.colors.length - 1, Math.max(0, scrolledHairColor.value + direction))
   const child = list.children[targetIndex] as HTMLLIElement
   scrollToItem(child)
 }
@@ -229,13 +229,13 @@ const handleMove = (event: Event, direction: number) => {
           srcset="@/assets/products/product-2-shadow@2x.webp 2x,
                   @/assets/products/product-2-shadow@3x.webp 3x"
           class="long-product-shadow">
-        <img class="long-product" src="@/assets/products/long11.png" alt="">
-        <template v-if="doubleProduct">
+        <ProductImage class="long-product" :product="store.selectedColor.product1" />
+        <template v-if="store.selectedColor.product2">
           <img src="@/assets/products/product-1-shadow.webp"
             srcset="@/assets/products/product-1-shadow@2x.webp 2x,
                     @/assets/products/product-1-shadow@3x.webp 3x"
             class="short-product-shadow">
-          <img class="short-product" src="@/assets/products/short21.png" alt="">
+          <ProductImage class="short-product" :product="store.selectedColor.product2" />
         </template>
       </figure>
     </button>
@@ -245,7 +245,7 @@ const handleMove = (event: Event, direction: number) => {
       即可為您模擬使用安夏朵矯/補色洗髮精的效果
       <span ref="infoRef">
         <img src="@/assets/alert-info-icon.svg" alt="" @click="handleClickInfo">
-        <span v-if="infoVisible">此效果模擬圖為漂至歐系7度以上的頭髮效果<br />
+        <span v-if="store.infoVisible">此效果模擬圖為漂至歐系7度以上的頭髮效果<br />
           比7度更深的髮色不建議參考此效果</span>
       </span>
     </p>
@@ -253,15 +253,15 @@ const handleMove = (event: Event, direction: number) => {
       <li v-for="category in store.categories" :class="getCategoryClass(category)" @click="handleClickItem($event)">{{ category }}</li>
     </ul>
     <div class="hair">
-      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, -1)" :class="{ invisible: selectedHairColor === 0 }">
+      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, -1)" :class="{ invisible: scrolledHairColor === 0 }">
       <ul ref="hairRef" @scroll="handleHairColorScroll" @touchstart="touchStartHair" @touchend="touchEndHair" @wheel="wheelHair">
         <li v-for="color in store.colors" :class="getHairColorClass(color.name)" :style="getHairColorStyle(color.name)" @click="handleClickItem($event)">
           <HairImage :color="color"/>
         </li>
       </ul>
-      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, 1)" :class="{ invisible: selectedHairColor === store.colors.length - 1 }">
+      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, 1)" :class="{ invisible: scrolledHairColor === store.colors.length - 1 }">
     </div>
-    <ProductDialog v-if="store.productDialog" :double-product="doubleProduct" :color="store.colors[0]" />
+    <ProductDialog v-if="store.productDialog" />
   </div>
 </template>
 
@@ -313,6 +313,7 @@ const handleMove = (event: Event, direction: number) => {
     border-radius: 25px;
     box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.16);
     position: relative;
+    cursor: pointer;
 
     > img {
       width: 15px;
