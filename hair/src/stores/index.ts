@@ -37,7 +37,7 @@ export const useMainStore = defineStore('main', () => {
     color: [0, 0, 0, 0],
     link: '',
     name: '',
-    product1: { name: '', usage: '' },
+    product1: { name: '', usage: '', image: '' },
     product2: null,
   });
 
