@@ -14,7 +14,7 @@ const handleClick = () => {
   <div class="product-dialog" @click.self="handleClick">
     <dialog>
       <img class="close" src="@/assets/close-button.svg" alt="" @click="handleClick">
-      <main>
+      <main class="no-scrollbar">
         <div class="part1">
           <figure>
             <HairImage :color="store.selectedColor" />
@@ -38,7 +38,7 @@ const handleClick = () => {
               <template v-if="store.selectedColor.product2"><br />{{ store.selectedColor.product2.name }}</template></h2>
           </hgroup>
         </div>
-        <div class="part2">
+        <div class="part2 no-scrollbar">
           <ol>
             <li>
               <h3>調配產品</h3>

@@ -249,12 +249,12 @@ const handleMove = (event: Event, direction: number) => {
           比7度更深的髮色不建議參考此效果</span>
       </span>
     </p>
-    <ul ref="categoryRef" class="category" @scroll="handleCategoryScroll" @touchstart="touchStartCategory" @touchend="touchEndCategory" @wheel="wheelCategory">
+    <ul ref="categoryRef" class="category no-scrollbar" @scroll="handleCategoryScroll" @touchstart="touchStartCategory" @touchend="touchEndCategory" @wheel="wheelCategory">
       <li v-for="category in store.categories" :class="getCategoryClass(category)" @click="handleClickItem($event)">{{ category }}</li>
     </ul>
     <div class="hair">
       <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, -1)" :class="{ invisible: scrolledHairColor === 0 }">
-      <ul ref="hairRef" @scroll="handleHairColorScroll" @touchstart="touchStartHair" @touchend="touchEndHair" @wheel="wheelHair">
+      <ul ref="hairRef" class="no-scrollbar" @scroll="handleHairColorScroll" @touchstart="touchStartHair" @touchend="touchEndHair" @wheel="wheelHair">
         <li v-for="color in store.colors" :class="getHairColorClass(color.name)" :style="getHairColorStyle(color.name)" @click="handleClickItem($event)">
           <HairImage :color="color"/>
         </li>
