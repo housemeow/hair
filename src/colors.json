@@ -1,0 +1,648 @@
+[
+  {
+    "name": "11模擬圖",
+    "category": "11號",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "3~4"
+    },
+    "product2": {
+      "name": "-",
+      "usage": "-"
+    },
+    "link": "https://www.andshadow.com/products/color-correction-refresh-11",
+    "color": [
+      68,
+      44,
+      104,
+      76
+    ]
+  },
+  {
+    "name": "12 模擬圖",
+    "category": "12號",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "3~4"
+    },
+    "product2": {
+      "name": "-",
+      "usage": "-"
+    },
+    "link": "https://www.andshadow.com/products/color-correction-refresh-12",
+    "color": [
+      208,
+      210,
+      240,
+      127
+    ]
+  },
+  {
+    "name": "11+21 4:1 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      161,
+      34,
+      67,
+      76
+    ]
+  },
+  {
+    "name": "11+21 4:2 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      161,
+      34,
+      67,
+      114
+    ]
+  },
+  {
+    "name": "11+21 4:3 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      161,
+      34,
+      67,
+      153
+    ]
+  },
+  {
+    "name": "11+21 4:4 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      161,
+      34,
+      67,
+      191
+    ]
+  },
+  {
+    "name": "12+21 4:1 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      229,
+      43,
+      43,
+      89
+    ]
+  },
+  {
+    "name": "12+21 4:2 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      229,
+      43,
+      43,
+      114
+    ]
+  },
+  {
+    "name": "12+21 4:3 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      229,
+      43,
+      43,
+      153
+    ]
+  },
+  {
+    "name": "12+21 4:4 模擬圖",
+    "category": "粉色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 21 嫣紅",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      229,
+      43,
+      43,
+      191
+    ]
+  },
+  {
+    "name": "11+22 4:1 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      144,
+      34,
+      122,
+      89
+    ]
+  },
+  {
+    "name": "11+22 4:2 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      144,
+      34,
+      122,
+      127
+    ]
+  },
+  {
+    "name": "11+22 4:3 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      144,
+      34,
+      122,
+      204
+    ]
+  },
+  {
+    "name": "11+22 4:4 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      144,
+      34,
+      122,
+      242
+    ]
+  },
+  {
+    "name": "12+22 4:1 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      142,
+      34,
+      168,
+      89
+    ]
+  },
+  {
+    "name": "12+22 4:2 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      142,
+      34,
+      168,
+      127
+    ]
+  },
+  {
+    "name": "12+22 4:3 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      142,
+      34,
+      168,
+      191
+    ]
+  },
+  {
+    "name": "12+22 4:4 模擬圖",
+    "category": "紫色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 22 妍紫",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      142,
+      34,
+      168,
+      229
+    ]
+  },
+  {
+    "name": "11+23 4:1 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      61,
+      44,
+      104,
+      76
+    ]
+  },
+  {
+    "name": "11+23 4:2 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      65,
+      44,
+      104,
+      114
+    ]
+  },
+  {
+    "name": "11+23 4:3 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      65,
+      44,
+      104,
+      178
+    ]
+  },
+  {
+    "name": "11+23 4:4 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      65,
+      44,
+      104,
+      216
+    ]
+  },
+  {
+    "name": "12+23 4:1 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      64,
+      55,
+      117,
+      51
+    ]
+  },
+  {
+    "name": "12+23 4:2 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      64,
+      55,
+      117,
+      102
+    ]
+  },
+  {
+    "name": "12+23 4:3 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      64,
+      55,
+      117,
+      165
+    ]
+  },
+  {
+    "name": "12+23 4:4 模擬圖",
+    "category": "灰色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 23 羽灰",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      64,
+      55,
+      117,
+      216
+    ]
+  },
+  {
+    "name": "11+24 4:1 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      14,
+      35,
+      165,
+      51
+    ]
+  },
+  {
+    "name": "11+24 4:2 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      14,
+      35,
+      165,
+      102
+    ]
+  },
+  {
+    "name": "11+24 4:3 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      14,
+      35,
+      165,
+      153
+    ]
+  },
+  {
+    "name": "11+24 4:4 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 11",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      14,
+      35,
+      165,
+      191
+    ]
+  },
+  {
+    "name": "12+24 4:1 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "1"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      6,
+      62,
+      166,
+      76
+    ]
+  },
+  {
+    "name": "12+24 4:2 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "2"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      6,
+      62,
+      166,
+      127
+    ]
+  },
+  {
+    "name": "12+24 4:3 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "3"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      6,
+      62,
+      166,
+      178
+    ]
+  },
+  {
+    "name": "12+24 4:4 模擬圖",
+    "category": "藍色系",
+    "product1": {
+      "name": "安夏朵｜矯色洗髮精 12",
+      "usage": "4"
+    },
+    "product2": {
+      "name": "加強補色劑 24 黛藍",
+      "usage": "4"
+    },
+    "link": "https://www.andshadow.com/products/%E3%80%90%E9%9A%A8%E5%BF%83%E9%AB%AE%E8%89%B2%E3%80%9111%E4%BB%BB%E9%81%B8%E6%90%AD%E9%85%8D",
+    "color": [
+      6,
+      62,
+      166,
+      216
+    ]
+  }
+]
