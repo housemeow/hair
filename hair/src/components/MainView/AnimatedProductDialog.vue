@@ -37,7 +37,7 @@ const store = useMainStore()
 
   &.animate-enter-from :deep(dialog),
   &.animate-leave-to :deep(dialog) {
-    transform: translateY(100vh);
+    transform: translateY(calc(100 * var(--vh)));
   }
 }
 </style>

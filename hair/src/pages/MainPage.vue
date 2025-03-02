@@ -20,7 +20,7 @@ const store = useMainStore();
 
 <style scoped lang="scss">
 .background {
-  height: 100vh;
+  height: calc(100 * var(--vh));
   display: flex;
   flex-direction: column;
   background-size: cover;
