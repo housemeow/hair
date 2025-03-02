@@ -12,6 +12,7 @@ const root = ref<HTMLInputElement>();
 const handleFileChange = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
   store.selectedFile = file;
+  root.value!.value = '';
 }
 
 defineExpose({

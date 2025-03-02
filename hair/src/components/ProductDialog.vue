@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMainStore } from '@/stores';
-import DyedHair from '../DyedHair.vue';
-import ProductImage from '../ProductImage.vue';
+import DyedHair from '@/components/DyedHair.vue';
+import ProductImage from '@/components/ProductImage.vue';
 
 const store = useMainStore()
 

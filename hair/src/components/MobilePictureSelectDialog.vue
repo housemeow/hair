@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMainStore } from '@/stores';
-import ImageInput from '../ImageInput.vue';
+import ImageInput from '@/components/ImageInput.vue';
 
 const store = useMainStore()
 

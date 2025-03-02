@@ -3,8 +3,7 @@ import { onUnmounted, ref, watch } from 'vue';
 import PictureFrame from '@/components/MainView/PictureFrame.vue';
 import DyedHair from '@/components/DyedHair.vue';
 import { useMainStore } from '@/stores';
-import ProductImage from '../ProductImage.vue';
-import AnimatedProductDialog from '@/components/MainView/AnimatedProductDialog.vue';
+import ProductImage from '@/components/ProductImage.vue';
 
 const store = useMainStore()
 
@@ -166,27 +165,39 @@ const getHairColorStyle = (color: string) => {
 }
 
 const touchStartCategory = () => {
+  if (mainScroller.value === 'hair')  {
+    moveHairToCategory(scrolledHairColor.value, true)
+  }
   mainScroller.value = 'category'
 }
 
 const wheelCategory = (e: WheelEvent) => {
+  if (mainScroller.value === 'hair')  {
+    moveHairToCategory(scrolledHairColor.value, true)
+  }
   mainScroller.value = 'category'
 }
 
 const touchEndCategory = () => {
-  moveHairToCategory(scrolledCategory.value, true)
+  // moveHairToCategory(scrolledCategory.value, true)
 }
 
 const touchStartHair = () => {
+  if (mainScroller.value === 'category') {
+    moveCategoryToHair(scrolledHairColor.value, true)
+  }
   mainScroller.value = 'hair'
 }
 
 const wheelHair = (e: WheelEvent) => {
+  if (mainScroller.value === 'category') {
+    moveCategoryToHair(scrolledHairColor.value, true)
+  }
   mainScroller.value = 'hair'
 }
 
 const touchEndHair = () => {
-  moveCategoryToHair(scrolledHairColor.value, true)
+  // moveCategoryToHair(scrolledHairColor.value, true)
 }
 
 const scrollToItem = (item: HTMLElement) => {
@@ -199,12 +210,14 @@ const scrollToItem = (item: HTMLElement) => {
   list.scrollTo({ left: scrollLeft, behavior: 'smooth' })
 }
 
-const handleClickItem = (e: MouseEvent) => {
+const handleClickItem = (e: MouseEvent, scroller: typeof mainScroller.value) => {
+  mainScroller.value = scroller
   const target = e.currentTarget as HTMLElement as HTMLLIElement
   scrollToItem(target)
 }
 
-const handleMove = (event: Event, direction: number) => {
+const handleMoveHair = (event: Event, direction: number) => {
+  mainScroller.value = 'hair'
   const list = (event.currentTarget as HTMLElement).parentElement!.querySelector('ul') as HTMLUListElement
   const targetIndex = Math.min(store.colors.length - 1, Math.max(0, scrolledHairColor.value + direction))
   const child = list.children[targetIndex] as HTMLLIElement
@@ -257,18 +270,17 @@ const handleMove = (event: Event, direction: number) => {
       </span>
     </p>
     <ul ref="categoryRef" class="category no-scrollbar" @scroll="handleCategoryScroll" @touchstart="touchStartCategory" @touchend="touchEndCategory" @wheel="wheelCategory">
-      <li v-for="category in store.categories" :class="getCategoryClass(category)" @click="handleClickItem($event)">{{ category }}</li>
+      <li v-for="category in store.categories" :class="getCategoryClass(category)" @click="handleClickItem($event, 'category')">{{ category }}</li>
     </ul>
     <div class="hair">
-      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, -1)" :class="{ invisible: scrolledHairColor === 0 }">
+      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMoveHair($event, -1)" :class="{ invisible: scrolledHairColor === 0 }">
       <ul ref="hairRef" class="no-scrollbar" @scroll="handleHairColorScroll" @touchstart="touchStartHair" @touchend="touchEndHair" @wheel="wheelHair">
-        <li v-for="color in store.colors" :class="getHairColorClass(color.name)" :style="getHairColorStyle(color.name)" @click="handleClickItem($event)">
+        <li v-for="color in store.colors" :class="getHairColorClass(color.name)" :style="getHairColorStyle(color.name)" @click="handleClickItem($event, 'hair')">
           <DyedHair :color="color"/>
         </li>
       </ul>
-      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMove($event, 1)" :class="{ invisible: scrolledHairColor === store.colors.length - 1 }">
+      <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMoveHair($event, 1)" :class="{ invisible: scrolledHairColor === store.colors.length - 1 }">
     </div>
-    <AnimatedProductDialog />
   </div>
 </template>
 

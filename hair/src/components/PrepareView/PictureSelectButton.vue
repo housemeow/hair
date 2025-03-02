@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useImageInput } from '@/composables/useImageInput';
 import { useMainStore } from '@/stores';
-import MobilePictureSelectDialog from '@/components/PrepareView/MobilePictureSelectDialog.vue';
+import MobilePictureSelectDialog from '@/components/MobilePictureSelectDialog.vue';
 import ImageInput from '@/components/ImageInput.vue';
 
 const { fileRef, triggerFileSelection } = useImageInput();

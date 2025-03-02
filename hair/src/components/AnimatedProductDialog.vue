@@ -7,11 +7,10 @@ const store = useMainStore()
 
 <template>
   <Transition
-    v-show="store.productDialog"
     name="animate"
     :duration="550"
   >
-    <ProductDialog />
+    <ProductDialog v-if="store.productDialog" />
   </Transition>
 </template>
 

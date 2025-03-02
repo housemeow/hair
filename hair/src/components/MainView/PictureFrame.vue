@@ -14,7 +14,7 @@ import maskTopRight from '@/assets/mask_tr.png';
 import { useRwd } from '@/composables/rwd';
 import { useMainStore } from '@/stores';
 import { useImageInput } from '@/composables/useImageInput';
-import ImageInput from '../ImageInput.vue';
+import ImageInput from '@/components/ImageInput.vue';
 
 const { fileRef, triggerFileSelection } = useImageInput();
 const store = useMainStore();
