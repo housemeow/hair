@@ -1,47 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import MobilePictureSelectDialog from '@/components/PrepareView/MobilePictureSelectDialog.vue';
-import { useRwd } from '@/composables/rwd';
+import { useImageInput } from '@/composables/useImageInput';
 import { useMainStore } from '@/stores';
+import MobilePictureSelectDialog from '@/components/PrepareView/MobilePictureSelectDialog.vue';
+import ImageInput from '@/components/ImageInput.vue';
 
-const emit = defineEmits({
-  change: (event: Event) => true,
-});
+const { fileRef, triggerFileSelection } = useImageInput();
 
 const store = useMainStore()
-
-const fileRef = ref<HTMLInputElement>();
-
-const rwd = useRwd();
-
-const handleFileChange = (e: Event) => {
-  emit('change', e)
-}
-
-const handleClick = () => {
-  if (rwd.isMobile.value || rwd.isTablet.value) {
-    store.isMobileDialogShow = true;
-  } else {
-    fileRef.value!.click();
-  }
-}
-
-const handleClose = () => {
-  store.isMobileDialogShow = false;
-}
 </script>
 
 <template>
-  <div class="picture-select-button" >
+  <div class="picture-select-button">
     <button>
       <img class="cursor-pointer" src="@/assets/select-photo-button.webp"
         srcset="@/assets/select-photo-button@2x.webp 2x,
                 @/assets/select-photo-button@3x.webp 3x"
-                @click="handleClick">
-      <input type="file" ref="fileRef" accept="image/*" @change="handleFileChange" style="display: none">
+                @click="triggerFileSelection">
+      <ImageInput ref="fileRef" />
     </button>
     <p>建議使用沒有帽子或髮飾遮擋頭髮的照片為佳</p>
-    <MobilePictureSelectDialog v-if="store.isMobileDialogShow" @change="handleFileChange" @close="handleClose" />
   </div>
 </template>
 
@@ -71,5 +48,4 @@ const handleClose = () => {
     top: calc(100% - 5px);
   }
 }
-
 </style>

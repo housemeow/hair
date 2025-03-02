@@ -297,7 +297,6 @@ const handleMove = (event: Event, direction: number) => {
 
   button {
     margin-top: -25px;
-    z-index: 1;
     width: 100%;
     height: 50px;
     display: flex;
@@ -328,6 +327,7 @@ const handleMove = (event: Event, direction: number) => {
     }
 
     figure {
+      pointer-events: none;
       position: absolute;
       right: 0;
       bottom: 0;
@@ -415,7 +415,6 @@ const handleMove = (event: Event, direction: number) => {
         letter-spacing: normal;
         text-align: left;
         color: #fff;
-        z-index: 1;
 
         &::after {
           content: '';

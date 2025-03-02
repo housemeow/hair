@@ -2,6 +2,8 @@
 import PrepareView from '@/components/PrepareView/PrepareView.vue';
 import MainView from '@/components/MainView/MainView.vue';
 import { useMainStore } from '@/stores';
+import MobilePictureSelectDialog from '@/components/PrepareView/MobilePictureSelectDialog.vue';
+import ErrorView from '@/components/PrepareView/ErrorDialog.vue';
 
 const store = useMainStore();
 </script>
@@ -14,7 +16,21 @@ const store = useMainStore();
         <MainView v-else-if="store.viewState==='main'" />
       </Transition>
     </div>
+    <!-- fade in fade out -->
     <footer>Copyright © 2025 AND SHADOW. All rights reserved.</footer>
+    <Transition
+      enter-active-class="animate__animated animate__fadeIn"
+      leave-active-class="animate__animated animate__fadeOut"
+      class="animate__faster"
+     >
+     <MobilePictureSelectDialog v-if="store.isMobileDialogShow" />
+    </Transition>
+    <Transition
+        enter-active-class="animate__animated animate__fadeIn"
+        leave-active-class="animate__animated animate__fadeOut"
+      >
+        <ErrorView v-if="store.fileError" />
+      </Transition>
   </div>
 </template>
 

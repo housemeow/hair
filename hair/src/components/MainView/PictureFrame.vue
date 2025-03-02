@@ -13,7 +13,10 @@ import maskTopLeft from '@/assets/mask_tl.png';
 import maskTopRight from '@/assets/mask_tr.png';
 import { useRwd } from '@/composables/rwd';
 import { useMainStore } from '@/stores';
+import { useImageInput } from '@/composables/useImageInput';
+import ImageInput from '../ImageInput.vue';
 
+const { fileRef, triggerFileSelection } = useImageInput();
 const store = useMainStore();
 const pictureCanvasRef = ref<HTMLCanvasElement>();
 const hairCanvasRef = ref<HTMLCanvasElement>();
@@ -144,10 +147,6 @@ const render = async () => {
 }
 
 onMounted(render)
-
-const handleBack = () => {
-  store.viewState = 'prepare';
-}
 </script>
 
 <template>
@@ -155,7 +154,8 @@ const handleBack = () => {
     <canvas ref="pictureCanvasRef"></canvas>
     <canvas ref="hairCanvasRef"></canvas>
     <canvas ref="shadowCanvasRef"></canvas>
-    <img src="@/assets/photo-edit-button.svg" alt="" @click="handleBack">
+    <img src="@/assets/photo-edit-button.svg" alt="" @click="triggerFileSelection">
+    <ImageInput ref="fileRef" />
   </div>
 </template>
 
@@ -177,6 +177,7 @@ const handleBack = () => {
     top: 8px;
     right: 8px;
     width: 27px;
+    cursor: pointer;
   }
 }
 </style>

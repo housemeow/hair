@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useMainStore } from '@/stores';
+import ImageInput from '../ImageInput.vue';
 
-const emit = defineEmits();
-
-const selfieFile = ref<HTMLInputElement>();
-const selectFile = ref<HTMLInputElement>();
+const store = useMainStore()
 
 const handleClickFile = (e: Event) => {
   (e.currentTarget as HTMLElement).querySelector('input')!.click();
 }
 
-const handleFileChange = (e: Event) => {
-  emit('change', e);
-}
-
 const close = () => {
-  emit('close');
+  store.isMobileDialogShow = false;
 }
 </script>
 
@@ -25,12 +19,12 @@ const close = () => {
       <button @click="handleClickFile">
         <img src="@/assets/take-picture-icon.svg" alt="">
         <span>重新拍攝</span>
-        <input ref="selfieFile" type="file" capture="user" accept="image/*" @change="handleFileChange" style="display: none">
+        <ImageInput ref="selfieFile" capture="user" />
       </button>
       <button @click="handleClickFile">
         <img src="@/assets/choice-file-icon.svg" alt="">
         <span>選擇現成檔案</span>
-        <input ref="selectFile" type="file" accept="image/*" @change="handleFileChange" style="display: none">
+        <ImageInput ref="selectFile" />
       </button>
     </dialog>
   </div>

@@ -154,8 +154,37 @@ export const useMainStore = defineStore('main', () => {
   // file selection state
   const fileError = ref(false);
   const isMobileDialogShow = ref(false);
+  const selectedFile = ref<File>();
   const selectedImage = ref('');
   const croppedBase64 = ref('');
+
+  watch(() => selectedFile.value, (file?: File) => {
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const resizedDataURL = await CanvasRenderer.getCroppedImage(
+        e.target!.result as string,
+        500
+      );
+      selectedImage.value = resizedDataURL;
+
+      try {
+        await hairProcessor.value!.updateSrc(resizedDataURL)
+        isMobileDialogShow.value = false
+        croppedBase64.value = hairProcessor.value!.croppedBase64
+        viewState.value = 'main'
+      } catch (e) {
+        console.error(e)
+        fileError.value = true
+
+      }
+      console.log(resizedDataURL)
+    };
+
+    reader.readAsDataURL(file);
+  })
 
   function setFile(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -204,6 +233,7 @@ export const useMainStore = defineStore('main', () => {
     loadingProgressWidth,
     displayPercent,
     croppedBase64,
+    selectedFile,
     productDialog,
     load,
     setFile,

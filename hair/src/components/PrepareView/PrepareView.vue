@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import LoadingProgress from '@/components/PrepareView/LoadingProgress.vue';
-import ErrorView from '@/components/PrepareView/ErrorDialog.vue';
 import PictureSelectButton from '@/components/PrepareView/PictureSelectButton.vue';
 import { useMainStore } from '@/stores';
 import { onMounted } from 'vue';
@@ -34,12 +33,6 @@ onMounted(() => {
           <PictureSelectButton v-else @change="handleFileSelect" />
         </Transition>
       </div>
-      <Transition
-        enter-active-class="animate__animated animate__fadeIn"
-        leave-active-class="animate__animated animate__fadeOut"
-      >
-        <ErrorView v-if="store.fileError" />
-      </Transition>
     </main>
   </div>
 </template>

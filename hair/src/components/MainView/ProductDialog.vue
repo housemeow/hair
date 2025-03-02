@@ -13,7 +13,6 @@ const handleClick = () => {
 <template>
   <div class="product-dialog" @click.self="handleClick">
     <dialog>
-      <img class="close" src="@/assets/close-button.svg" alt="" @click="handleClick">
       <main class="no-scrollbar">
         <div class="part1">
           <figure>
@@ -102,6 +101,7 @@ const handleClick = () => {
         <p>!! 隨心髮色組合優惠熱銷中 !!</p>
         <a target="_blank" :href="store.selectedColor.link"><img src="@/assets/product-link-icon.svg" alt="">點擊進入官網商品頁</a>
       </footer>
+      <img class="close" src="@/assets/close-button.svg" alt="" @click="handleClick">
     </dialog>
   </div>
 </template>
@@ -114,7 +114,6 @@ const handleClick = () => {
   width: 100%;
   display: flex;
   height: calc(100% - 80px - 50px);
-  z-index: 1;
 
   dialog {
     display: flex;
@@ -122,17 +121,6 @@ const handleClick = () => {
     width: 100%;
     height: 100%;
     background-image: linear-gradient(to bottom, #757575, #484848 42%, #090909);
-
-    .close {
-      width: 32px;
-      position: absolute;
-      top: 12px;
-      right: 14px;
-      cursor: pointer;
-      z-index: 1;
-      background: black;
-      border-radius: 50%;
-    }
 
     main {
       flex: 1;
@@ -534,6 +522,17 @@ const handleClick = () => {
         }
       }
     }
+
+    .close {
+      width: 32px;
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      cursor: pointer;
+      z-index: 1;
+      background: black;
+      border-radius: 50%;
+    }
   }
 }
 
@@ -551,11 +550,6 @@ const handleClick = () => {
       border-radius: 22px;
       position: relative;
       height: auto;
-
-      .close {
-        top: 17px;
-        right: 20px;
-      }
 
       main {
         flex: auto;
@@ -684,6 +678,11 @@ const handleClick = () => {
         a {
           img {}
         }
+      }
+
+      .close {
+        top: 17px;
+        right: 20px;
       }
     }
   }
