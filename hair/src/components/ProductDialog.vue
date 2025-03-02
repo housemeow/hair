@@ -45,13 +45,13 @@ const handleClick = () => {
               <div class="product-mix" :class="{ 'double-product': store.selectedColor.product2 }">
                 <div>
                   <span>按{{ store.selectedColor.product1.usage }}下</span>
-                  <img class="long-product" src="@/assets/products/long11.png" alt="">
+                  <ProductImage class="long-product" :product="store.selectedColor.product1" />
                 </div>
                 <template v-if="store.selectedColor.product2">
                   <img class="add-icon" src="@/assets/add-icon.svg" alt="">
                   <div>
                     <span>按{{ store.selectedColor.product2.usage }}下</span>
-                    <img class="short-product" src="@/assets/products/short22.png" alt="">
+                    <ProductImage class="short-product" :product="store.selectedColor.product2" />
                   </div>
                 </template>
               </div>
