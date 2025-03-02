@@ -532,15 +532,9 @@ const handleMoveHair = (event: Event, direction: number) => {
         cursor: pointer;
 
         .dyed-hair {
-          border: 2px solid transparent;
-          padding: 2px;
           transition: 0.1s;
           width: var(--img-width);
           height: var(--img-height);
-
-          :deep(.mask) {
-            inset: 2px;
-          }
         }
 
         &::after {
@@ -555,7 +549,13 @@ const handleMoveHair = (event: Event, direction: number) => {
 
         &.active {
           .dyed-hair {
-            border-color: var(--hair-color);
+            &:after {
+              content: '';
+              position: absolute;
+              inset: 2px;
+              border-radius: 50%;
+              border: 2px solid white;
+            }
           }
         }
       }
