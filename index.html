@@ -1,108 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Hair Color</title>
-    <style>
-      canvas {
-        clear: both;
-        display: block;
-        mix-blend-mode: multiply;
-      }
-
-      section {
-        opacity: 1;
-        transition: opacity 500ms ease-in-out;
-      }
-
-      .removed {
-        display: none;
-      }
-
-      .invisible {
-        opacity: 0.2;
-      }
-
-      .segment {
-        position: relative;
-        display: flex;
-        z-index: 0;
-      }
-
-      .segment canvas {
-        position: absolute;
-        top: 0px;
-        bottom: 0px;
-      }
-
-      .flex {
-        display: flex;
-      }
-
-      .flex-wrap {
-        flex-wrap: wrap;
-      }
-
-      .flex-col {
-        flex-direction: column;
-      }
-
-      .flex.items-start {
-        align-items: flex-start;
-      }
-
-      .w-full {
-        width: 100%;
-      }
-    </style>
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-55" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <section id="demos" class="invisible">
-      <!-- checkbox for hide canvas / show canvas -->
-      <div class="flex flex-wrap">
-        <label for="hair_visible">
-          <input type="checkbox" id="hair_visible" checked />
-          Hair Visible
-        </label>
-        <label for="model_visible">
-          <input type="checkbox" id="model_visible" checked />
-          Model Visible
-        </label>
-        <!-- <select name="renderMode" id="renderMode">
-          <option value="category">Category</option>
-          <option value="confidence">Confidence</option>
-        </select> -->
-        <select name="color" id="color"></select>
-        <label for="file">
-          Select:
-          <input id="file" type="file" accept="image/*" />
-        </label>
-        <label for="selfie">
-          Selfie:
-          <input id="selfie" type="file" capture="user" accept="image/*" />
-        </label>
-        <label for="blur"
-          >Blur: <span class="blur-text">2</span
-          ><input id="blur" type="range" id="threshold" min="0" max="20" step="1" value="2"
-        /></label>
-      </div>
-      <div class="flex items-start flex-col" style="width: 100%; max-width: 375px; margin: 0 auto">
-        <div class="segment w-full" style="border: 1px solid black">
-          <canvas class="removed w-full"></canvas>
-          <img src="" class="w-full" title="Click to get segmentation!" />
-        </div>
-        <img
-          class="sample w-full"
-          src="./assets/測試用圖_改色.jpg"
-          crossorigin="anonymous"
-          alt=""
-          style="border: 1px solid black"
-        />
-      </div>
-    </section>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script type="module" src="./js/index.js"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
