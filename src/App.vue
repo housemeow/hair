@@ -1,14 +1,24 @@
 <script setup lang="ts">
 import MobileLandscapeDialog from '@/components/MobileLandscapeDialog.vue';
 import MainPage from '@/pages/MainPage.vue';
-import Crop from './Crop.vue';
-import { onMounted, ref } from 'vue';
+// import Crop from './Crop.vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 const style = ref('')
 
-onMounted(() => {
+const updateVh = () => {
   const vh = window.innerHeight * 0.01
   style.value = `--vh: ${vh}px`
+}
+
+onMounted(() => {
+  updateVh()
+
+  window.addEventListener('resize', updateVh)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateVh)
 })
 </script>
 

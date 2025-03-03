@@ -99,7 +99,7 @@ class CanvasRenderer {
 
   static getCroppedImage(src: string, maxSize: number): Promise<string> {
     return new Promise((resolve) => {
-      const img = new Image();
+      let img = new Image();
       img.onload = () => {
         // 設定最大尺寸
         let width = img.width;
@@ -117,7 +117,7 @@ class CanvasRenderer {
         }
 
         // 建立 Canvas 縮放圖片
-        const canvas = document.createElement("canvas");
+        let canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         let ctx = canvas.getContext("2d")!;
@@ -131,11 +131,11 @@ class CanvasRenderer {
         ctx = null!;
         // **釋放 canvas 變數**
         canvas.remove();
-        (canvas as unknown as null) = null;
+        canvas = null!;
 
         img.src = "";
         img.remove();
-        (img as unknown as null) = null;
+        img = null!
 
         resolve(resizedDataURL);
       };
