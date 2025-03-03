@@ -30,7 +30,7 @@ class HairProcessor {
   objectDetector!: ObjectDetector;
   canvasRenderer!: CanvasRenderer;
   renderMode!: RenderMode;
-  hairColor: any;
+  hairColor: number[];
   unionRect!: Rect;
   croppedImage: HTMLImageElement;
   croppedBase64: string;
@@ -53,6 +53,9 @@ class HairProcessor {
     this.croppedBase64 = ''
     this.croppedImage = new Image()
     this.blur = 0;
+    this.canvas = document.createElement('canvas')
+    this.ctx = this.canvas.getContext('2d')!
+    this.canvasRenderer = new CanvasRenderer(this.ctx)
   }
 
   async loadWasm() {
@@ -75,7 +78,7 @@ class HairProcessor {
       img.onload = () => resolve()
       img.src = src;
     })
-    console.log('srcImage', img.naturalWidth, img.naturalHeight)
+    console.log('srcImage', img.naturalWidth, img.naturalHeight, img.width, img.height)
     await Promise.all([
       this.hairSegmenter.createSegment(img),
       this.personDetector.detect(img),
@@ -102,6 +105,8 @@ class HairProcessor {
     })
     this.hairSegmenter.createSegment(this.croppedImage)
     console.log('this.croppedImage', this.croppedImage.naturalWidth, this.croppedImage.naturalHeight)
+    this.canvas.width = this.croppedImage.width
+    this.canvas.height = this.croppedImage.height
   }
 
   async render() {

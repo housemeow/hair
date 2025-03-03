@@ -220,6 +220,7 @@ export const useMainStore = defineStore('main', () => {
     config,
     loading,
     selectedColor,
+    hairProcessor,
     infoVisible,
     loadingVisible,
     fileError,
