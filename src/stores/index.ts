@@ -4,6 +4,54 @@ import type { AppConfig, HairColor } from '@/database';
 import HairProcessor from '@/hairProcessor';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
+import * as util from '@/util'
+import long11 from '@/assets/products/long11.png'
+import long12 from '@/assets/products/long12.png'
+import short21 from '@/assets/products/short21.png'
+import short22 from '@/assets/products/short22.png'
+import short23 from '@/assets/products/short23.png'
+import short24 from '@/assets/products/short24.png'
+import hair from '@/assets/hair_sample.png'
+import logo from '@/assets/logo-header.webp'
+import product2Shadow from '@/assets/products/product-2-shadow.webp'
+import product1Shadow from '@/assets/products/product-1-shadow.webp'
+import shadowMobileTopLeft from '@/assets/shadow_tl_1.png';
+import shadowTopLeft from '@/assets/shadow_tl_2.png';
+import shadowTop from '@/assets/shadow_t.png';
+import shadowTopRight from '@/assets/shadow_tr.png';
+import shadowLeft from '@/assets/shadow_l.png';
+import shadowRight from '@/assets/shadow_r.png';
+import shadowBottomLeft from '@/assets/shadow_bl.png';
+import shadowBottom from '@/assets/shadow_b.png';
+import shadowBottomRight from '@/assets/shadow_br.png';
+import maskTopLeft from '@/assets/mask_tl.png';
+import maskTopRight from '@/assets/mask_tr.png';
+import background from '@/assets/background.webp';
+
+const preloadImages = [
+  long11,
+  long12,
+  short21,
+  short22,
+  short23,
+  short24,
+  hair,
+  logo,
+  product2Shadow,
+  product1Shadow,
+  shadowMobileTopLeft,
+  shadowTopLeft,
+  shadowTop,
+  shadowTopRight,
+  shadowLeft,
+  shadowRight,
+  shadowBottomLeft,
+  shadowBottom,
+  shadowBottomRight,
+  maskTopLeft,
+  maskTopRight,
+  background,
+]
 
 type ViewState = 'prepare' | 'main';
 
@@ -102,7 +150,6 @@ export const useMainStore = defineStore('main', () => {
           const data = await database.value.load()
           colors.value = data.colors
           config.value = data.config
-
           return data
         }, children: [
           {
@@ -127,6 +174,9 @@ export const useMainStore = defineStore('main', () => {
           }
         ],
       },
+      ...preloadImages.map((src) => ({
+        name: `preload image: ${src}`, task: async () => util.loadImage(src)
+      }))
     ]
 
     function getNestedTaskCount(tasks: LoadTask[]): number {
