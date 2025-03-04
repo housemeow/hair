@@ -36,6 +36,7 @@ export const useMainStore = defineStore('main', () => {
     product1: { name: '', usage: '', image: '' },
     product2: null,
   });
+  const product2No = computed(() => selectedColor.value?.product2?.name.match(/\d+/).toString())
 
   watch(() => selectedColor.value, (color) => {
     if (color) {
@@ -232,6 +233,7 @@ export const useMainStore = defineStore('main', () => {
     croppedBase64,
     selectedFile,
     productDialog,
+    product2No,
     load,
     setFile,
   };
