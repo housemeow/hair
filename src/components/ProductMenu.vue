@@ -23,7 +23,7 @@ const getScrollerCurrentIndex = (list: HTMLUListElement) => {
     const childWidth = child.clientWidth
     const childOffsetInScroller = child.offsetLeft - listBoundingClientRect.left
 
-    if (scrollLeft - childWidth <= childOffsetInScroller - MARGIN_LEFT && childOffsetInScroller - MARGIN_LEFT <= scrollLeft + childWidth) {
+    if (scrollLeft - childWidth <= childOffsetInScroller - MARGIN_LEFT && childOffsetInScroller - MARGIN_LEFT <= scrollLeft + childWidth || i === childCount - 1) {
       const start = (scrollLeft - childWidth / 2)
       const move = childOffsetInScroller - MARGIN_LEFT
       const diff = move - start
