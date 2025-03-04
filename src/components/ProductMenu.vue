@@ -23,7 +23,7 @@ const getScrollerCurrentIndex = (list: HTMLUListElement) => {
     const childWidth = child.clientWidth
     const childOffsetInScroller = child.offsetLeft - listBoundingClientRect.left
 
-    if (scrollLeft - childWidth <= childOffsetInScroller - MARGIN_LEFT && childOffsetInScroller - MARGIN_LEFT <= scrollLeft + childWidth) {
+    if (scrollLeft - childWidth <= childOffsetInScroller - MARGIN_LEFT && childOffsetInScroller - MARGIN_LEFT <= scrollLeft + childWidth || i === childCount - 1) {
       const start = (scrollLeft - childWidth / 2)
       const move = childOffsetInScroller - MARGIN_LEFT
       const diff = move - start
@@ -152,7 +152,7 @@ const touchMoveHairCount = ref(0)
 const wheelCategory = (e: WheelEvent) => {
   wheelCategoryCount.value++;
   if (categoryRef.value && e.deltaX === 0) {
-    categoryRef.value.scrollTo({ left: categoryRef.value.scrollLeft + e.deltaY, behavior: 'smooth' })
+    categoryRef.value.scrollTo({ left: categoryRef.value.scrollLeft + e.deltaY * store.config.categoryWheelScale, behavior: 'smooth' })
   }
   // if (mainScroller.value === 'hair')  {
   //   moveHairToCategory(scrolledHairColor.value, true)
@@ -179,7 +179,7 @@ const touchEndCategory = () => {
 const wheelHair = (e: WheelEvent) => {
   wheelHairCount.value++
   if (hairRef.value && e.deltaX === 0) {
-    hairRef.value.scrollTo({ left: hairRef.value.scrollLeft + e.deltaY, behavior: 'smooth' })
+    hairRef.value.scrollTo({ left: hairRef.value.scrollLeft + e.deltaY * store.config.colorWheelScale, behavior: 'smooth' })
   }
   // if (mainScroller.value === 'category') {
   //   moveCategoryToHair(scrolledHairColor.value, true)
