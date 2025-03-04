@@ -41,7 +41,7 @@ const handleClick = () => {
           <ol>
             <li>
               <h3>調配產品</h3>
-              <p>根據髮長在 <em>搖搖瓶</em> 中加入約20-60ml的水，擠入適量的矯色或補色產品。</p>
+              <p>根據髮長在 <a :href="store.config.mixingBottleLink" target="_blank">搖搖瓶</a> 中加入約20-60ml的水，擠入適量的矯色或補色產品。</p>
               <div class="product-mix" :class="{ 'double-product': store.selectedColor.product2 }">
                 <div>
                   <span>按{{ store.selectedColor.product1.usage }}下</span>
@@ -302,7 +302,7 @@ const handleClick = () => {
               text-align: left;
               color: #fff;
 
-              em {
+              a {
                 font-weight: 900;
                 text-decoration: underline;
               }
@@ -570,19 +570,6 @@ const handleClick = () => {
             .dyed-hair {
               margin-top: 0;
             }
-
-            .long-product,
-            .short-product,
-            .long-product-shadow,
-            .short-product-shadow {}
-
-            .long-product {}
-
-            .long-product-shadow {}
-
-            .short-product {}
-
-            .short-product-shadow {}
           }
 
           hgroup {
@@ -613,53 +600,11 @@ const handleClick = () => {
             padding-right: 0;
 
             > li {
-              &::before {}
-
-              &:nth-last-child(n+2)::after {}
-
               h3 {
                 + * {
                   margin-top: 1px;
                 }
               }
-
-              p {
-                em {}
-              }
-
-              .product-mix {
-                div {
-                  span {}
-
-                  .long-product {}
-                }
-
-                &.double-product {
-                  div {}
-
-                  .short-product {}
-
-                  .add-icon {}
-                }
-              }
-
-              .into-icon {}
-
-              .description {
-                span {}
-              }
-
-              .plus-icon {}
-
-              ul.hair {
-                li {
-                  img {}
-
-                  span {}
-                }
-              }
-
-              + li {}
             }
           }
 
@@ -672,12 +617,6 @@ const handleClick = () => {
       footer {
         border-bottom-left-radius: 22px;
         border-bottom-right-radius: 22px;
-
-        p {}
-
-        a {
-          img {}
-        }
       }
 
       .close {

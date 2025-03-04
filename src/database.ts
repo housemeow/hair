@@ -14,21 +14,22 @@ export interface HairColor {
 }
 
 export interface AppConfig {
-  confidenceThreshold1: number
-  confidenceThreshold2: number
+  mixingBottleLink: string
   blur: number
+  categoryWheelScale: number
+  colorWheelScale: number
 }
 
 class Database {
   colorUrl: string;
   configUrl: string;
   colors: HairColor[];
-  config: { confidenceThreshold1: number; confidenceThreshold2: number; };
+  config: AppConfig;
   constructor(colorUrl: string, configUrl: string) {
     this.colorUrl = colorUrl;
     this.configUrl = configUrl;
     this.colors = [];
-    this.config = { confidenceThreshold1: 0.5, confidenceThreshold2: 0.5 };
+    this.config = { mixingBottleLink: '', blur: 6, categoryWheelScale: 1, colorWheelScale: 1 };
   }
 
   async load() {
@@ -94,38 +95,22 @@ class Database {
     const config = await fetch(this.configUrl)
       .then((response) => response.text())
       .then((data) => {
-        const [header, ...rows] = data.split("\r\n");
-
-        const headerMap: Record<string, number> = {};
-        // 參數	數值
-        headerMap.argumentIndex = header
-          .split("\t")
-          .findIndex((col) => col === "參數");
-        headerMap.valueIndex = header
-          .split("\t")
-          .findIndex((col) => col === "數值");
-
-        if (headerMap.confidenceThreshold1Index === -1) {
-          alert("資料庫欄位錯誤");
-        }
-
-        const config = {
-          confidenceThreshold1: 0.5,
-          confidenceThreshold2: 0.5,
-          blur: 0,
-        };
-
+        const [, ...rows] = data.split("\r\n");
+        const config: AppConfig = { mixingBottleLink: '', blur: 6, categoryWheelScale: 1, colorWheelScale: 1 };
         rows
           .map((row) => row.split("\t"))
           .forEach(([argument, value]) => {
-            if (argument === "confidenceThreshold1") {
-              config.confidenceThreshold1 = parseFloat(value);
+            if (argument === "搖搖瓶網址") {
+              config.mixingBottleLink = value;
             }
-            if (argument === "confidenceThreshold2") {
-              config.confidenceThreshold2 = parseFloat(value);
+            if (argument === "邊緣模糊") {
+              config.blur = parseFloat(value);
             }
-            if (argument === "blur") {
-              config.blur = parseInt(value);
+            if (argument === "色系滾動倍率") {
+              config.categoryWheelScale = parseFloat(value);
+            }
+            if (argument === "髮色滾動倍率") {
+              config.colorWheelScale = parseFloat(value);
             }
           });
 

@@ -20,11 +20,7 @@ export const useMainStore = defineStore('main', () => {
   const viewState = ref<ViewState>('prepare');
   const productDialog = ref(false)
   const infoVisible = ref(false)
-  const config = ref<AppConfig>({
-    blur: 0,
-    confidenceThreshold1: 0.5,
-    confidenceThreshold2: 0.5,
-  })
+  const config = ref<AppConfig>()
 
   // product state
   const colors = ref<HairColor[]>([]);

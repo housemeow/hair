@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import shadowMobileTopLeft from '@/assets/shadow_tl_1.png';
 import shadowTopLeft from '@/assets/shadow_tl_2.png';
 import shadowTop from '@/assets/shadow_t.png';
@@ -26,6 +26,8 @@ const hairCtx = ref<CanvasRenderingContext2D>();
 const shadowCtx = ref<CanvasRenderingContext2D>();
 const { isMobile } = useRwd();
 const timer = ref<number>()
+
+const style = computed(() => ({ '--blur': store.config.blur }))
 
 watch(() => store.selectedColor, () => {
   renderHair()
@@ -215,7 +217,7 @@ const render = async () => {
 </script>
 
 <template>
-  <div class="picture-frame">
+  <div class="picture-frame" :style="style">
     <canvas ref="pictureCanvasRef"></canvas>
     <canvas ref="hairCanvasRef" class="blur"></canvas>
     <canvas ref="shadowCanvasRef"></canvas>
@@ -226,6 +228,7 @@ const render = async () => {
 
 <style scoped lang="scss">
 .picture-frame {
+  --blur: 6;
   width: 100%;
   position: relative;
 
@@ -237,7 +240,7 @@ const render = async () => {
     height: 100%;
 
     &.blur {
-      filter: blur(2px);
+      filter: blur(calc(var(--blur) * 1px));
       mix-blend-mode: multiply;
     }
   }
