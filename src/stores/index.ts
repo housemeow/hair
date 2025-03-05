@@ -68,7 +68,12 @@ export const useMainStore = defineStore('main', () => {
   const viewState = ref<ViewState>('prepare');
   const productDialog = ref(false)
   const infoVisible = ref(false)
-  const config = ref<AppConfig>()
+  const config = ref<AppConfig>({
+    mixingBottleLink: '',
+    blur: 6,
+    categoryWheelScale: 1,
+    colorWheelScale: 1,
+  })
 
   // product state
   const colors = ref<HairColor[]>([]);
@@ -84,7 +89,7 @@ export const useMainStore = defineStore('main', () => {
     product1: { name: '', usage: '', image: '' },
     product2: null,
   });
-  const product2No = computed(() => selectedColor.value?.product2?.name.match(/\d+/).toString())
+  const product2No = computed(() => (selectedColor.value?.product2?.name.match(/\d+/) || '').toString())
 
   watch(() => selectedColor.value, (color) => {
     if (color) {
