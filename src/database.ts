@@ -39,8 +39,6 @@ class Database {
         const [header, ...rows] = data.split("\r\n");
 
         const headerMap: Record<string, number> = {};
-        // 產品名稱	色系	R	G	B	色彩增值alpha
-        headerMap.nameIndex = header.split("\t").findIndex((col) => col === "產品名稱");
         headerMap.categoryIndex = header.split("\t").findIndex((col) => col === "色系");
         headerMap.product1Name = header.split("\t").findIndex((col) => col === "商品1名稱");
         headerMap.product1Usage = header.split("\t").findIndex((col) => col === "商品1操作");
@@ -57,7 +55,6 @@ class Database {
           .findIndex((col) => col === "色彩增值alpha");
 
         if (
-          headerMap.nameIndex === -1 ||
           headerMap.colorIndex === -1 ||
           headerMap.categoryIndex === -1
         ) {
@@ -73,8 +70,10 @@ class Database {
           const a = Math.floor(
             255 * (parseFloat(cells[headerMap.aIndex].replace("%", "")) / 100)
           );
+          const name = `${cells[headerMap.product1Name]}(${cells[headerMap.product1Usage]})-${cells[headerMap.product2Name]}(${cells[headerMap.product2Usage]})`
+          console.log(name)
           return {
-            name: cells[headerMap.nameIndex],
+            name,
             category: cells[headerMap.categoryIndex],
             product1: {
               name: cells[headerMap.product1Name],
