@@ -71,7 +71,6 @@ class Database {
             255 * (parseFloat(cells[headerMap.aIndex].replace("%", "")) / 100)
           );
           const name = `${cells[headerMap.product1Name]}(${cells[headerMap.product1Usage]})-${cells[headerMap.product2Name]}(${cells[headerMap.product2Usage]})`
-          console.log(name)
           return {
             name,
             category: cells[headerMap.categoryIndex],
