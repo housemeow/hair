@@ -1,120 +1,264 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import DyedHair from '@/components/DyedHair.vue'
 import { useMainStore } from '@/stores'
+import { useRwd } from '@/composables/rwd'
 
+type MainScroller = 'empty' | 'category' | 'hair'
+type TouchState = 'start' | 'move' | 'end'
+
+const DEBUG = false
 const store = useMainStore()
+const rwd = useRwd()
 const categoryRef = ref<HTMLUListElement>()
 const hairRef = ref<HTMLUListElement>()
 const scrolledCategory = ref(0)
 const scrolledHairColor = ref(0)
 const scrolledHairColorValue = ref(0)
-const scrollTimer = ref(0)
-const mainScroller = ref<'empty'|'category'|'hair'>('empty')
+const categoryScrollTimer = ref(0)
+const hairScrollTimer = ref(0)
+const mainScroller = ref<MainScroller>('empty')
+const categoryTouchState = ref<TouchState>('end')
+const hairTouchState = ref<TouchState>('end')
+const categoryScrolling = ref(false)
+const hairScrolling = ref(false)
+const scrolling = computed(() => categoryScrolling.value || hairScrolling.value)
+const alignScrollerCount = ref(0)
+
+const alignScroller = () => {
+  alignScrollerCount.value++
+  const currentCategoryIndex = getScrollerCurrentIndex(categoryRef.value!)!
+  const currentHairIndex = getScrollerCurrentIndex(hairRef.value!)!
+  const categoryScrollLeft = categoryRef.value!.scrollLeft
+  const hairScrollLeft = hairRef.value!.scrollLeft
+  const categoryScrollToIndex = getCategoryScrollToIndex()
+  const hairScrollToIndex = getHairScrollToIndex()
+
+  if (DEBUG) {
+    console.log('alignScroller', {
+      curCategoryMiddle: currentCategoryIndex.middle,
+      categoryScrollLeft,
+      curHairMiddle: currentHairIndex.middle,
+      hairScrollLeft,
+      categoryScrollToIndex,
+      hairScrollToIndex,
+    })
+  }
+
+  if (mainScroller.value === 'category') {
+    const categoryChanged = Math.abs(currentCategoryIndex.middle - categoryScrollLeft) > 3
+    if (categoryChanged) {
+      scrollToItem(categoryRef.value!.children[currentCategoryIndex.i] as HTMLElement)
+      return
+    }
+
+    const hairChanged = hairScrollToIndex !== undefined && currentHairIndex.i !== hairScrollToIndex
+    if (hairChanged) {
+      scrollToItem(hairRef.value!.children[hairScrollToIndex] as HTMLElement)
+    } else {
+      mainScroller.value = 'empty'
+      store.selectedColor = store.colors[scrolledHairColor.value]
+    }
+  } else if (mainScroller.value === 'hair') {
+    const hairChanged = Math.abs(currentHairIndex.middle - hairScrollLeft) > 3
+    if (hairChanged) {
+      scrollToItem(hairRef.value!.children[currentHairIndex.i] as HTMLElement)
+      return
+    }
+
+    const categoryChanged = categoryScrollToIndex != undefined && currentCategoryIndex.i !== categoryScrollToIndex
+    if (categoryChanged) {
+      scrollToItem(categoryRef.value!.children[categoryScrollToIndex] as HTMLElement)
+    } else {
+      mainScroller.value = 'empty'
+      store.selectedColor = store.colors[scrolledHairColor.value]
+    }
+  }
+}
+
+const desktopStill = computed(() => !scrolling.value)
+const mobileStill = computed(() => !scrolling.value && categoryTouchState.value === 'end' && hairTouchState.value === 'end')
+
+// for desktop
+watch(() => scrolling.value, () => {
+  const isDesktop = rwd.isDesktop.value
+  // console.log('watch desktop', isDesktop, desktopStill.value)
+  if (isDesktop && desktopStill.value) {
+    alignScroller()
+  }
+})
+
+// for touch device
+watch([scrolling, categoryTouchState, hairTouchState], () => {
+  const isTouchDevice = rwd.isMobile.value || rwd.isTablet.value
+  console.log('watch mobile', isTouchDevice, mobileStill.value)
+  if (isTouchDevice && mobileStill.value) {
+    alignScroller()
+  }
+})
 
 const getScrollerCurrentIndex = (list: HTMLUListElement) => {
-  const listBoundingClientRect = list.getBoundingClientRect()
   const scrollLeft = list.scrollLeft
-  const MARGIN_LEFT = list.clientWidth * 0.5
+  const marginLeft = list.clientWidth * 0.5
   const childCount = list.children.length
+  /**
+     1. scroll-snap-align: start scroll to child(1))
+        |1. scrollLeft: scroll container left.
+        |2. marginLeft: a space for the first child to align center.
+        |3. child.offsetLeft:
+        |4. child.clientWidth: child width
+        |5.
+        |
+        |------------------------------------------------------------------|
+       >|<scrollLeft (0)                                                   |
+        |<-        ::before(50%)        -><-             50%             ->|
+        |           (marginLeft)                                           |
+        |                                 |-------||-------||-------||-----|
+        |                                 |   1   ||   2   ||   3   ||   4 |
+        |<--     child1.offsetLeft     -->|-------||-------||-------||-----|
+        |<--          child2.offsetLeft         -->|        |        |     |
+        |<--               child3.offsetLeft             -->|        |     |
+        |<--                    child4.offsetLeft                 -->|     |
+        |                                                                  |
+        |------------------------------------------------------------------|
 
+      2. scroll-snap-align: center (scroll to child(1))
+        |------------------------------------------------------------------|
+  <-  ->|scrollLeft (child(1) halfWidth)                                   |
+  <-         ::before(50%)       ->                                        |
+        |                                 |<- scrollMiddle
+        |formula:
+        | childSnapOffsetLeft  = child.offsetLeft - marginLeft - childWidth / 2|
+        | childSnapOffsetRight = child.offsetLeft - marginLeft + childWidth / 2|
+        |                             |-------||-------||-------||-------|||
+        |                             |   1   ||   2   ||   3   ||   4   |||
+        |                             |-------||-------||-------||-------|||
+        |                             <-     ->                            |
+        |                            child width                           |
+        |------------------------------------------------------------------|
+    */
   for (let i = 0; i < childCount; i++) {
     const child = list.children[i] as HTMLElement
     const childWidth = child.clientWidth
-    const childOffsetInScroller = child.offsetLeft - listBoundingClientRect.left
+    const childSnapOffsetLeft = child.offsetLeft - marginLeft
+    const childSnapOffsetRight = childSnapOffsetLeft + childWidth
 
-    if (scrollLeft - childWidth <= childOffsetInScroller - MARGIN_LEFT && childOffsetInScroller - MARGIN_LEFT <= scrollLeft + childWidth || i === childCount - 1) {
-      const start = (scrollLeft - childWidth / 2)
-      const move = childOffsetInScroller - MARGIN_LEFT
-      const diff = move - start
-      const ratio = i - diff / childWidth
-      return { i, ratio }
+    const matchedFistChild = i === 0 && scrollLeft < childSnapOffsetRight
+    const matchedChild = childSnapOffsetLeft <= scrollLeft && scrollLeft < childSnapOffsetRight
+    const matchedLastChild = i === childCount - 1 && childSnapOffsetLeft <= scrollLeft
+
+    if (matchedFistChild || matchedLastChild || matchedChild) {
+      const child = list.children[i] as HTMLElement
+      const childWidth = child.clientWidth
+      const left = child.offsetLeft - marginLeft
+      const right = left + childWidth
+      const ratio = i + (scrollLeft - left) / (right - left) - 0.5
+      const middle = left + childWidth / 2
+
+      console.log({ i , ratio, middle })
+
+      return { i, ratio, middle }
     }
   }
-
-  return { i: 0, ratio: 0 }
 }
 
-const handleScroll = (list: HTMLUListElement, setIndex: (i: number, ratio: number) => void) => {
-  const { i, ratio } = getScrollerCurrentIndex(list)
-  setIndex(i, ratio)
+const handleScroll = (list: HTMLUListElement, indexCallback: (i: number, ratio: number) => void) => {
+  const { i, ratio } = getScrollerCurrentIndex(list)!
+  indexCallback(i, ratio)
 }
 
-const updateScrollTimer = () => {
-  clearTimeout(scrollTimer.value)
-  scrollTimer.value = setTimeout(() => {
-    if (mainScroller.value === 'category') {
-      moveHairToCategory(scrolledCategory.value)
-    } else if (mainScroller.value === 'hair') {
-      moveCategoryToHair(scrolledHairColor.value)
-    }
-    mainScroller.value = 'empty'
-    store.selectedColor = store.colors[scrolledHairColor.value]
-  }, 30)
+const updateCategoryScrollTimer = () => {
+  categoryScrolling.value = true
+  clearTimeout(categoryScrollTimer.value)
+  categoryScrollTimer.value = setTimeout(() => {
+    categoryScrolling.value = false
+  }, 100)
 }
 
-const moveHairToCategory = (newCategoryIndex: number, force?: boolean) => {
-  let scrollToIndex = null
-  // new position is on the left, move to the most right color
-  if (newCategoryIndex < scrolledCategory.value) {
-    for (let i = store.colors.length - 1; i >= 0; i--) {
-      if (store.colors[i].category === store.categories[newCategoryIndex]) {
-        scrollToIndex = i
-        break
-      }
-    }
-  // new position is on the right, move to the most left color
-  } else if (force || newCategoryIndex > scrolledCategory.value) {
-    for (let i = 0; i < store.colors.length; i++) {
-      if (store.colors[i].category === store.categories[newCategoryIndex]) {
-        scrollToIndex = i
-        break
-      }
-    }
+const updateHairScrollTimer = () => {
+  hairScrolling.value = true
+  clearTimeout(hairScrollTimer.value)
+  hairScrollTimer.value = setTimeout(() => {
+    hairScrolling.value = false
+  }, 100)
+}
+
+const getHairScrollToIndex = () => {
+  // find the nearest hair color in the new category
+  const { i: currentHairIndex } = getScrollerCurrentIndex(hairRef.value!)!
+  const categoryHairs = store.colors.map((color, index) => ({
+    index,
+    category: color.category
+  })).filter(color => color.category === store.categories[scrolledCategory.value])
+  const categoryHairLeftIndex = categoryHairs[0].index
+  const categoryHairRightIndex = categoryHairs[categoryHairs.length - 1].index
+
+  if (currentHairIndex < categoryHairLeftIndex) {
+    return categoryHairLeftIndex
+  } else if (currentHairIndex > categoryHairRightIndex) {
+    return categoryHairRightIndex
   }
-  if (scrollToIndex === null) {
-    return;
+}
+
+const moveHairToCategory = () => {
+  const scrollToIndex = getHairScrollToIndex()
+  if (scrollToIndex === undefined) {
+    return
   }
+
   const hairList = hairRef.value!
   const child = hairList.children[scrollToIndex] as HTMLLIElement
   scrollToItem(child)
 }
 
-const handleCategoryScroll = (e: Event) => {
-  updateScrollTimer()
-  handleScroll(e.target as HTMLUListElement, (newCategoryIndex) => {
-    if (mainScroller.value === 'empty' || mainScroller.value === 'category') {
-      mainScroller.value = 'category'
-      moveHairToCategory(newCategoryIndex)
-    }
+const getCategoryScrollToIndex = () => {
+  const { i: currentCategoryIndex } = getScrollerCurrentIndex(categoryRef.value!)!
 
-    scrolledCategory.value = newCategoryIndex
-  })
+  const newCategoryIndex = store.categories.findIndex(category => category === store.colors[scrolledHairColor.value].category)
+  if (currentCategoryIndex === newCategoryIndex) {
+    return
+  }
+
+  return newCategoryIndex
 }
 
-const moveCategoryToHair = (newColorIndex: number, force?: boolean) => {
-  const originalCategoryIndex = store.categories.findIndex(category => category === store.colors[scrolledHairColor.value].category)
-  const newCategoryIndex = store.categories.findIndex(category => category === store.colors[newColorIndex].category)
-  if (!(force || originalCategoryIndex !== newCategoryIndex)) {
-    return;
+const moveCategoryToHair = () => {
+  const scrollToIndex = getCategoryScrollToIndex()
+  if (scrollToIndex === undefined) {
+    return
   }
   const categoryList = categoryRef.value!
-  const child = categoryList.children[newCategoryIndex] as HTMLLIElement
+  const child = categoryList.children[scrollToIndex] as HTMLLIElement
   scrollToItem(child)
 }
 
-const handleHairColorScroll = (e: Event) => {
-  updateScrollTimer()
-  handleScroll(e.target as HTMLUListElement, (newColorIndex, ratio) => {
-    if (mainScroller.value === 'empty' || mainScroller.value === 'hair') {
-      mainScroller.value = 'hair'
-      moveCategoryToHair(newColorIndex)
+const handleCategoryScroll = (e: Event) => {
+  console.log('scroll category')
+  updateCategoryScrollTimer()
+  handleScroll(e.target as HTMLUListElement, (newCategoryIndex) => {
+    const changed = scrolledCategory.value != newCategoryIndex
+    scrolledCategory.value = newCategoryIndex
+    if (changed && (mainScroller.value === 'empty' || mainScroller.value === 'category')) {
+      mainScroller.value = 'category'
+      moveHairToCategory()
     }
-
-    scrolledHairColor.value = newColorIndex
-    scrolledHairColorValue.value = ratio
   })
 }
+
+const handleHairColorScroll = (e: Event) => {
+  console.log('scroll hair')
+  updateHairScrollTimer()
+  handleScroll(e.target as HTMLUListElement, (newColorIndex, ratio) => {
+    const changed = scrolledHairColor.value != newColorIndex
+    scrolledHairColor.value = newColorIndex
+    scrolledHairColorValue.value = ratio
+    if (changed && (mainScroller.value === 'empty' || mainScroller.value === 'hair')) {
+      mainScroller.value = 'hair'
+      moveCategoryToHair()
+    }
+  })
+}
+
 const getCategoryClass = (category: string) => {
   return store.categories.findIndex(value => value === category) === scrolledCategory.value ? 'active' : ''
 }
@@ -149,71 +293,72 @@ const wheelHairCount = ref(0)
 const touchMoveCategoryCount = ref(0)
 const touchMoveHairCount = ref(0)
 
+const handleWheel = (e: WheelEvent) => {
+  wheelHairCount.value++
+  return e.deltaX === 0 && Math.abs(e.deltaY) > 1
+}
+
 const wheelCategory = (e: WheelEvent) => {
+  console.log('wheel category', e.deltaX, e.deltaY)
+  updateCategoryScrollTimer()
   wheelCategoryCount.value++;
-  if (categoryRef.value && e.deltaX === 0) {
+  if (categoryRef.value && handleWheel(e)) {
     categoryRef.value.scrollTo({ left: categoryRef.value.scrollLeft + e.deltaY * store.config.categoryWheelScale, behavior: 'smooth' })
   }
-  // if (mainScroller.value === 'hair')  {
-  //   moveHairToCategory(scrolledHairColor.value, true)
-  // }
   mainScroller.value = 'category'
-}
-
-const touchStartCategory = () => {
-  // if (mainScroller.value === 'hair')  {
-  //   moveHairToCategory(scrolledHairColor.value, true)
-  // }
-  mainScroller.value = 'category'
-}
-
-const touchMoveCategory = () => {
-  touchMoveCategoryCount.value++
-  mainScroller.value = 'category'
-}
-
-const touchEndCategory = () => {
-  // moveHairToCategory(scrolledCategory.value, true)
 }
 
 const wheelHair = (e: WheelEvent) => {
+  console.log('wheel hair', e.deltaX, e.deltaY)
+  updateHairScrollTimer()
   wheelHairCount.value++
-  if (hairRef.value && e.deltaX === 0) {
+  if (hairRef.value && handleWheel(e)) {
     hairRef.value.scrollTo({ left: hairRef.value.scrollLeft + e.deltaY * store.config.colorWheelScale, behavior: 'smooth' })
   }
-  // if (mainScroller.value === 'category') {
-  //   moveCategoryToHair(scrolledHairColor.value, true)
-  // }
   mainScroller.value = 'hair'
+}
+
+const touchStartCategory = () => {
+  console.log('touchstart category')
+  mainScroller.value = 'category'
+  categoryTouchState.value = 'start'
 }
 
 const touchStartHair = () => {
-  // if (mainScroller.value === 'category') {
-  //   moveCategoryToHair(scrolledHairColor.value, true)
-  // }
+  console.log('touchstart hair')
   mainScroller.value = 'hair'
+  hairTouchState.value = 'start'
+}
+
+const touchMoveCategory = () => {
+  console.log('touchmove category')
+  touchMoveCategoryCount.value++
+  mainScroller.value = 'category'
+  categoryTouchState.value = 'move'
 }
 
 const touchMoveHair = () => {
+  console.log('touchmove hair')
   touchMoveHairCount.value++
   mainScroller.value = 'hair'
+  hairTouchState.value = 'move'
+}
+
+const touchEndCategory = () => {
+  console.log('touchend category')
+  categoryTouchState.value = 'end'
 }
 
 const touchEndHair = () => {
-  // moveCategoryToHair(scrolledHairColor.value, true)
-}
-
-const getChildRelativeScrollLeft = (child: HTMLElement) => {
-  const list = child.parentElement as HTMLUListElement
-  const MARGIN_LEFT = list.clientWidth * 0.5
-  const listBoundingClientRect = list.getBoundingClientRect()
-  const itemOffsetInScroller = (child.offsetLeft - listBoundingClientRect.left - MARGIN_LEFT)
-  return child.clientWidth / 2 + itemOffsetInScroller
+  console.log('touchend hair')
+  hairTouchState.value = 'end'
 }
 
 const scrollToItem = (item: HTMLElement) => {
-  const scrollLeft = getChildRelativeScrollLeft(item)
-  const list = item.parentElement as HTMLUListElement
+  const list = item.offsetParent as HTMLUListElement
+  const marginLeft = list.clientWidth / 2
+  const scrollLeft = item.offsetLeft - marginLeft + item.clientWidth / 2
+  console.log('scrollToItem', scrollLeft)
 
   list.scrollTo({ left: scrollLeft, behavior: 'smooth' })
 }
@@ -235,12 +380,27 @@ const handleMoveHair = (event: Event, direction: number) => {
 
 <template>
   <div class="product-menu">
+    <pre v-if="DEBUG" style="font-size: 8px; position: fixed; left: 0; top: 0">{{ {
+      mainScroller,
+      categoryTouchState,
+      hairTouchState,
+      categoryScrolling,
+      hairScrolling,
+      mobileStill,
+      desktopStill,
+      categoryScrollLeft: categoryRef && categoryRef.scrollLeft,
+      hairScrollLeft: hairRef && hairRef.scrollLeft,
+      currentCategoryIndex: categoryRef && getScrollerCurrentIndex(categoryRef),
+      currentHairIndex: hairRef && getScrollerCurrentIndex(hairRef),
+      alignScrollerCount,
+    } }}</pre>
     <ul ref="categoryRef" class="category no-scrollbar" @scroll="handleCategoryScroll" @touchstart="touchStartCategory" @touchmove="touchMoveCategory" @touchend="touchEndCategory" @wheel="wheelCategory">
       <li v-for="category in store.categories" :key="category" :class="getCategoryClass(category)" @click="handleClickItem($event, 'category')">{{ category }}</li>
     </ul>
+    <div v-if="DEBUG" class="center"></div>
     <div class="hair">
       <img src="@/assets/left-arrow-button.svg" alt="" @click="handleMoveHair($event, -1)" :class="{ invisible: scrolledHairColor === 0 }">
-      <ul ref="hairRef" class="no-scrollbar" @scroll="handleHairColorScroll" @touchstart="touchStartHair" @touchmove="touchMoveHair" @touchend="touchEndHair" @wheel="wheelHair">
+      <ul ref="hairRef" class="no-scrollbar" @scroll="handleHairColorScroll" @wheel="wheelHair" @touchstart="touchStartHair" @touchmove="touchMoveHair" @touchend="touchEndHair">
         <li v-for="color in store.colors" :key="color.name" :class="getHairColorClass(color.name)" :style="getHairColorStyle(color.name)" @click="handleClickItem($event, 'hair')">
           <DyedHair :color="color"/>
         </li>
@@ -252,6 +412,15 @@ const handleMoveHair = (event: Event, direction: number) => {
 
 <style scoped lang="scss">
 .product-menu {
+  display: flex;
+  flex-direction: column;
+
+  .center {
+    align-self: center;
+    width: 1px;
+    height: 1em;
+    background: black;
+  }
   .category {
     margin-left: 8px;
     margin-right: 8px;
@@ -262,10 +431,11 @@ const handleMoveHair = (event: Event, direction: number) => {
     list-style: none;
     overflow: auto;
     scroll-snap-type: x mandatory;
+    position: relative;
 
     &::before, &::after {
       content: '';
-      flex: 0 0 50%;
+      flex: 0 0 100%;
     }
 
     li {
@@ -314,6 +484,7 @@ const handleMoveHair = (event: Event, direction: number) => {
       display: flex;
       overflow: auto;
       scroll-snap-type: x mandatory;
+      position: relative;
 
       &:before, &:after {
         content: '';
@@ -372,6 +543,8 @@ const handleMoveHair = (event: Event, direction: number) => {
 
 @media screen and (min-width: 601px) {
   .product-menu {
+    align-items: center;
+
     .category {
       margin-left: 0;
       margin-right: 0;
