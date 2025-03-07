@@ -82,7 +82,6 @@ const mobileStill = computed(() => !scrolling.value && categoryTouchState.value 
 // for desktop
 watch(() => scrolling.value, () => {
   const isDesktop = rwd.isDesktop.value
-  // console.log('watch desktop', isDesktop, desktopStill.value)
   if (isDesktop && desktopStill.value) {
     alignScroller()
   }
@@ -91,7 +90,6 @@ watch(() => scrolling.value, () => {
 // for touch device
 watch([scrolling, categoryTouchState, hairTouchState], () => {
   const isTouchDevice = rwd.isMobile.value || rwd.isTablet.value
-  console.log('watch mobile', isTouchDevice, mobileStill.value)
   if (isTouchDevice && mobileStill.value) {
     alignScroller()
   }
@@ -155,7 +153,9 @@ const getScrollerCurrentIndex = (list: HTMLUListElement) => {
       const ratio = i + (scrollLeft - left) / (right - left) - 0.5
       const middle = left + childWidth / 2
 
-      console.log({ i , ratio, middle })
+      if (DEBUG) {
+        console.log({ i , ratio, middle })
+      }
 
       return { i, ratio, middle }
     }
@@ -233,7 +233,9 @@ const moveCategoryToHair = () => {
 }
 
 const handleCategoryScroll = (e: Event) => {
-  console.log('scroll category')
+  if (DEBUG) {
+    console.log('scroll category')
+  }
   updateCategoryScrollTimer()
   handleScroll(e.target as HTMLUListElement, (newCategoryIndex) => {
     const changed = scrolledCategory.value != newCategoryIndex
@@ -246,7 +248,9 @@ const handleCategoryScroll = (e: Event) => {
 }
 
 const handleHairColorScroll = (e: Event) => {
-  console.log('scroll hair')
+  if (DEBUG) {
+    console.log('scroll hair')
+  }
   updateHairScrollTimer()
   handleScroll(e.target as HTMLUListElement, (newColorIndex, ratio) => {
     const changed = scrolledHairColor.value != newColorIndex
@@ -299,7 +303,9 @@ const handleWheel = (e: WheelEvent) => {
 }
 
 const wheelCategory = (e: WheelEvent) => {
-  console.log('wheel category', e.deltaX, e.deltaY)
+  if (DEBUG) {
+    console.log('wheel category', e.deltaX, e.deltaY)
+  }
   updateCategoryScrollTimer()
   wheelCategoryCount.value++;
   if (categoryRef.value && handleWheel(e)) {
@@ -309,7 +315,9 @@ const wheelCategory = (e: WheelEvent) => {
 }
 
 const wheelHair = (e: WheelEvent) => {
-  console.log('wheel hair', e.deltaX, e.deltaY)
+  if (DEBUG) {
+    console.log('wheel hair', e.deltaX, e.deltaY)
+  }
   updateHairScrollTimer()
   wheelHairCount.value++
   if (hairRef.value && handleWheel(e)) {
@@ -319,38 +327,50 @@ const wheelHair = (e: WheelEvent) => {
 }
 
 const touchStartCategory = () => {
-  console.log('touchstart category')
+  if (DEBUG) {
+    console.log('touchstart category')
+  }
   mainScroller.value = 'category'
   categoryTouchState.value = 'start'
 }
 
 const touchStartHair = () => {
-  console.log('touchstart hair')
+  if (DEBUG) {
+    console.log('touchstart hair')
+  }
   mainScroller.value = 'hair'
   hairTouchState.value = 'start'
 }
 
 const touchMoveCategory = () => {
-  console.log('touchmove category')
+  if (DEBUG) {
+    console.log('touchmove category')
+  }
   touchMoveCategoryCount.value++
   mainScroller.value = 'category'
   categoryTouchState.value = 'move'
 }
 
 const touchMoveHair = () => {
-  console.log('touchmove hair')
+  if (DEBUG) {
+    console.log('touchmove hair')
+  }
   touchMoveHairCount.value++
   mainScroller.value = 'hair'
   hairTouchState.value = 'move'
 }
 
 const touchEndCategory = () => {
-  console.log('touchend category')
+  if (DEBUG) {
+    console.log('touchend category')
+  }
   categoryTouchState.value = 'end'
 }
 
 const touchEndHair = () => {
-  console.log('touchend hair')
+  if (DEBUG) {
+    console.log('touchend hair')
+  }
   hairTouchState.value = 'end'
 }
 
@@ -358,7 +378,9 @@ const scrollToItem = (item: HTMLElement) => {
   const list = item.offsetParent as HTMLUListElement
   const marginLeft = list.clientWidth / 2
   const scrollLeft = item.offsetLeft - marginLeft + item.clientWidth / 2
-  console.log('scrollToItem', scrollLeft)
+  if (DEBUG) {
+    console.log('scrollToItem', scrollLeft)
+  }
 
   list.scrollTo({ left: scrollLeft, behavior: 'smooth' })
 }
