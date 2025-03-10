@@ -97,7 +97,7 @@ class CanvasRenderer {
     this.ctx.canvas.height = height;
   }
 
-  static getCroppedImage(src: string, maxSize: number): Promise<string> {
+  static getResizedImage(src: string, maxSize: number): Promise<string> {
     return new Promise((resolve) => {
       let img = new Image();
       img.onload = () => {
@@ -143,6 +143,15 @@ class CanvasRenderer {
       // 設定圖片來源
       img.src = src;
     });
+  }
+
+  static getCroppedBase64(img: HTMLImageElement, rect: Rect) {
+    const canvas = document.createElement('canvas');
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, rect.left, rect.top, rect.width, rect.height, 0, 0, rect.width, rect.height);
+    return canvas.toDataURL("image/png");
   }
 
   getImage() {

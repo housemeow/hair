@@ -16,6 +16,8 @@ import { useMainStore } from '@/stores';
 import { useImageInput } from '@/composables/useImageInput';
 import ImageInput from '@/components/ImageInput.vue';
 import * as util from '@/util';
+import CanvasRenderer from '@/canvasRenderer';
+import Rect from '@/rect';
 
 const { fileRef, triggerFileSelection } = useImageInput();
 const store = useMainStore();
@@ -105,6 +107,21 @@ const renderPicture = async () => {
   }
 
   async function drawPicture(ctx: CanvasRenderingContext2D, src: string) {
+    const hairProcessor = store.hairProcessor!
+    const originalImage = await util.loadImage(store.originalImageBase64)
+    const topRatio = hairProcessor.unionRect.top / hairProcessor.height
+    const leftRatio = hairProcessor.unionRect.left / hairProcessor.width
+    const rightRatio = hairProcessor.unionRect.right / hairProcessor.width
+    const bottomRatio = hairProcessor.unionRect.bottom / hairProcessor.height
+
+    const unionRect = new Rect(
+      topRatio * originalImage.height,
+      leftRatio * originalImage.width,
+      rightRatio * originalImage.width,
+      bottomRatio * originalImage.height
+    )
+    src = CanvasRenderer.getCroppedBase64(originalImage, unionRect)
+
     const image = await util.loadImage(src);
     const imageWidth = image.width;
     const imageHeight = image.height;

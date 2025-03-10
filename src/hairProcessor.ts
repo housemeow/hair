@@ -89,15 +89,12 @@ class HairProcessor {
       throw new Error('No hair detected')
     }
 
+    this.width = img.width
+    this.height = img.height
     this.unionRect = Rect.union([this.hairSegmenter.rect, this.personDetector.rect])
 
     console.log('rect', this.unionRect, this.hairSegmenter.rect, this.personDetector.rect)
-    const canvas = document.createElement('canvas')
-    canvas.width = this.unionRect.width
-    canvas.height = this.unionRect.height
-    const ctx = canvas.getContext('2d')!
-    ctx.drawImage(img, this.unionRect.left, this.unionRect.top, this.unionRect.width, this.unionRect.height, 0, 0, this.unionRect.width, this.unionRect.height)
-    this.croppedBase64 = canvas.toDataURL("image/png");
+    this.croppedBase64 = CanvasRenderer.getCroppedBase64(img, this.unionRect);
 
     await new Promise<void>(resolve => {
       this.croppedImage.onload = () => resolve()

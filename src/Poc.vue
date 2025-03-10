@@ -61,7 +61,7 @@ const onFileChange = (e: Event) => {
   }
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const resizedDataURL = await CanvasRenderer.getCroppedImage(
+    const resizedDataURL = await CanvasRenderer.getResizedImage(
       e.target!.result as string,
       500
     );

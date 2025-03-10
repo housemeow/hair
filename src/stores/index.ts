@@ -208,6 +208,7 @@ export const useMainStore = defineStore('main', () => {
   const isMobileDialogShow = ref(false);
   const selectedFile = ref<File>();
   const selectedImage = ref('');
+  const originalImageBase64 = ref('');
   const croppedBase64 = ref('');
 
   watch(() => selectedFile.value, (file?: File) => {
@@ -216,7 +217,8 @@ export const useMainStore = defineStore('main', () => {
     }
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const resizedDataURL = await CanvasRenderer.getCroppedImage(
+      originalImageBase64.value = e.target!.result as string;
+      const resizedDataURL = await CanvasRenderer.getResizedImage(
         e.target!.result as string,
         500
       );
@@ -245,7 +247,7 @@ export const useMainStore = defineStore('main', () => {
     }
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const resizedDataURL = await CanvasRenderer.getCroppedImage(
+      const resizedDataURL = await CanvasRenderer.getResizedImage(
         e.target!.result as string,
         500
       );
@@ -285,6 +287,7 @@ export const useMainStore = defineStore('main', () => {
     displayRatio,
     loadingProgressWidth,
     displayPercent,
+    originalImageBase64,
     croppedBase64,
     selectedFile,
     productDialog,
