@@ -95,11 +95,29 @@ const renderMask = async () => {
 const renderPicture = async () => {
   const pictureCanvas = pictureCanvasRef.value!;
   console.log('pictureCanvas', pictureCanvas.clientWidth, pictureCanvas.clientHeight, pictureCanvas.width, pictureCanvas.height)
-  pictureCanvas.width = pictureCanvas.clientWidth;
-  pictureCanvas.height = pictureCanvas.clientHeight;
+  pictureCanvas.width = pictureCanvas.clientWidth * 4;
+  pictureCanvas.height = pictureCanvas.clientHeight * 4;
   pictureCtxRef.value!.clearRect(0, 0, pictureCanvas.width, pictureCanvas.height);
   drawBackground(pictureCtxRef.value!);
-  await drawPicture(pictureCtxRef.value!, store.croppedBase64);
+
+  const hairProcessor = store.hairProcessor!
+  const maxWidth = window.innerWidth * 4
+  console.log('maxWidth', maxWidth)
+  const resizedImageUrl = await CanvasRenderer.getResizedImage(store.originalImageBase64, maxWidth)
+  const originalImage = await util.loadImage(resizedImageUrl)
+  const topRatio = hairProcessor.unionRect.top / hairProcessor.height
+  const leftRatio = hairProcessor.unionRect.left / hairProcessor.width
+  const rightRatio = hairProcessor.unionRect.right / hairProcessor.width
+  const bottomRatio = hairProcessor.unionRect.bottom / hairProcessor.height
+  console.log(originalImage.naturalWidth)
+
+  const unionRect = new Rect(
+    topRatio * originalImage.height,
+    leftRatio * originalImage.width,
+    rightRatio * originalImage.width,
+    bottomRatio * originalImage.height
+  )
+  await drawPicture(pictureCtxRef.value!, CanvasRenderer.getCroppedBase64(originalImage, unionRect));
 
   function drawBackground(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = '#cbcbcb';
@@ -107,21 +125,6 @@ const renderPicture = async () => {
   }
 
   async function drawPicture(ctx: CanvasRenderingContext2D, src: string) {
-    const hairProcessor = store.hairProcessor!
-    const originalImage = await util.loadImage(store.originalImageBase64)
-    const topRatio = hairProcessor.unionRect.top / hairProcessor.height
-    const leftRatio = hairProcessor.unionRect.left / hairProcessor.width
-    const rightRatio = hairProcessor.unionRect.right / hairProcessor.width
-    const bottomRatio = hairProcessor.unionRect.bottom / hairProcessor.height
-
-    const unionRect = new Rect(
-      topRatio * originalImage.height,
-      leftRatio * originalImage.width,
-      rightRatio * originalImage.width,
-      bottomRatio * originalImage.height
-    )
-    src = CanvasRenderer.getCroppedBase64(originalImage, unionRect)
-
     const image = await util.loadImage(src);
     const imageWidth = image.width;
     const imageHeight = image.height;
