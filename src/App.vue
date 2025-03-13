@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import MobileLandscapeDialog from '@/components/MobileLandscapeDialog.vue';
 import MainPage from '@/pages/MainPage.vue';
-// import Crop from './Crop.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 const style = ref('')
@@ -25,7 +24,6 @@ onUnmounted(() => {
 <template>
   <div class="app" :style="style">
     <MainPage />
-     <!-- <Crop /> -->
     <MobileLandscapeDialog />
   </div>
 </template>

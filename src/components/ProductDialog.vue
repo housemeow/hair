@@ -2,8 +2,21 @@
 import { useMainStore } from '@/stores';
 import DyedHair from '@/components/DyedHair.vue';
 import ProductImage from '@/components/ProductImage.vue';
+import { ref } from 'vue'
 
 const store = useMainStore()
+
+const isScrolled = ref(false)
+const mainRef = ref<HTMLElement | null>(null)
+const part2Ref = ref<HTMLElement | null>(null)
+
+const handleScroll = () => {
+  if (mainRef.value || part2Ref.value) {
+    const mainScrolled = mainRef.value?.scrollTop || 0
+    const part2Scrolled = part2Ref.value?.scrollTop || 0
+    isScrolled.value = mainScrolled > 0 || part2Scrolled > 0
+  }
+}
 
 const handleClick = () => {
   store.productDialog = false
@@ -13,7 +26,7 @@ const handleClick = () => {
 <template>
   <div class="product-dialog" @click.self="handleClick">
     <dialog>
-      <main class="no-scrollbar">
+      <main class="no-scrollbar" ref="mainRef" @scroll="handleScroll">
         <div class="part1">
           <figure>
             <DyedHair :color="store.selectedColor" />
@@ -37,7 +50,7 @@ const handleClick = () => {
               <template v-if="store.selectedColor.product2"><br />{{ store.selectedColor.product2.name }}</template></h2>
           </hgroup>
         </div>
-        <div class="part2 no-scrollbar">
+        <div class="part2 no-scrollbar" ref="part2Ref" @scroll="handleScroll">
           <ol>
             <li>
               <h3>調配產品</h3>
@@ -87,6 +100,11 @@ const handleClick = () => {
               <p>沖洗後使用瞬間髮膜，吹乾前使用免沖洗護髮產品，然後吹乾頭髮。</p>
             </li>
           </ol>
+          <transition name="fade">
+            <div v-show="!isScrolled">
+              <img src="@/assets/scroll-down-icon.svg" alt="">
+            </div>
+          </transition>
           <aside v-if="store.selectedColor.product2">
             <span>備註</span>
             <p>圖示模擬真實洗出髮色效果<br />
@@ -440,6 +458,34 @@ const handleClick = () => {
           }
         }
 
+        > div {
+          width: 28px;
+          height: 43px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 14px;
+          border: solid 2px #fff;
+          background-color: #000;
+          position: fixed;
+          bottom: 165px;
+          left: 24px;
+
+          img {
+            width: 15px;
+            animation: slide 0.8s ease-in-out infinite;
+          }
+        }
+
+        @keyframes slide {
+          0%, 80%, 100% {
+            transform: translateY(0px);
+          }
+          40% {
+            transform: translateY(3px);
+          }
+        }
+
         aside {
           margin-top: 23px;
           margin-left: 14px;
@@ -556,6 +602,7 @@ const handleClick = () => {
         height: 424px;
         flex-direction: row;
         overflow: hidden;
+        padding-bottom: 0;
 
         .part1 {
           flex-shrink: 0;
@@ -593,9 +640,10 @@ const handleClick = () => {
           overflow: auto;
           padding-top: 53px;
           padding-right: 42px;
-          padding-bottom: 53px;
+          position: relative;
 
           ol {
+            padding-bottom: 53px;
             padding-left: 75px;
             padding-right: 0;
 
@@ -606,6 +654,13 @@ const handleClick = () => {
                 }
               }
             }
+          }
+
+          > div {
+            flex-shrink: 0;
+            position: sticky;
+            bottom: 8px;
+            left: 33px;
           }
 
           aside {
@@ -625,5 +680,15 @@ const handleClick = () => {
       }
     }
   }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

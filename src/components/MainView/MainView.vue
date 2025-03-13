@@ -45,7 +45,12 @@ onUnmounted(() => {
           class="app">
     </header>
     <PictureFrame />
-    <button @click="showProduct"><img src="@/assets/book-icon.svg" alt="">
+    <button @click="showProduct">
+      <span>
+        點擊看
+        <img src="@/assets/click-to-see-icon.svg" alt="">
+      </span>
+      <img src="@/assets/book-icon.svg" alt="">
       產品使用說明
       <figure>
         <img src="@/assets/products/product-2-shadow.webp"
@@ -133,7 +138,46 @@ onUnmounted(() => {
     position: relative;
     cursor: pointer;
 
+    span {
+      display: flex;
+      justify-content: center;
+      padding: 2px 5px 2px 9px;
+      border-radius: 9.5px;
+      align-items: center;
+      background-color: #dbbe7e;
+      font-size: 10px;
+      font-weight: normal;
+      font-stretch: normal;
+      font-style: normal;
+      line-height: 1.5;
+      letter-spacing: normal;
+      text-align: left;
+      color: #000;
+
+      img {
+        margin-left: 6px;
+        width: 7px;
+        animation: slide 0.8s ease-in-out infinite;
+      }
+
+      @keyframes slide {
+        0% {
+          transform: translateX(-1px);
+        }
+        40% {
+          transform: translateX(3px);
+        }
+        80% {
+          transform: translateX(-1px);
+        }
+        100% {
+          transform: translateX(-1px);
+        }
+      }
+    }
+
     > img {
+      margin-left: 13px;
       width: 15px;
       margin-right: 8px;
     }
