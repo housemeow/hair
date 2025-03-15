@@ -139,7 +139,7 @@ onUnmounted(() => {
     cursor: pointer;
 
     span {
-      margin-left: -10px;
+      margin-left: -10%;
       display: flex;
       justify-content: center;
       padding: 2px 5px 2px 9px;
